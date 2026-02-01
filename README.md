@@ -11,10 +11,10 @@ A full-stack MERN application for renting and buying premium fashion.
 - **Frontend**: React.js, Tailwind CSS, Framer Motion
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB Atlas
-- **AI**: Google Generative AI (Gemini 1.5 Flash)
+- **AI**: Google Generative AI (Gemini 2.5 Flash)
 
 ## Setup Instructions
-1. Clone the repo: `git clone <your-repo-link>`
+1. Clone the repo: `git clone https://github.com/shiv1234-byte/occazionals.git`
 2. Install dependencies for both folders: `npm install`
 3. Add your `.env` file in the server folder with `GEMINI_API_KEY` and `MONGO_URI`.
 4. Run the project: `npm run dev`
