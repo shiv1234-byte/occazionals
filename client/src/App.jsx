@@ -13,7 +13,7 @@ import Orders from './pages/Orders';
 import MyOrders from './pages/MyOrders';
 
 // 1. IS LINE KO ADD KAREIN (Ensure the path is correct)
-import ChatBot from './components/ChatBot'; 
+import ChatBot from './components/Chatbot'; 
 
 function App() {
   const auth = useAuth(); 
