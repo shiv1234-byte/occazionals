@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Bot } from 'lucide-react'; // Fix 1: Change 'bot' to 'Bot'
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '../utils/config';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
