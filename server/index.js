@@ -18,10 +18,22 @@ const app = express();
 
 // 1. GLOBAL MIDDLEWARES
 app.use(express.json()); // To parse JSON bodies
+const cors = require('cors');
+
+// CORS configuration
 app.use(cors({
-  origin: ["https://occazionals.vercel.app/"], // Apne Vercel link se replace karein
-  credentials: true
-}));         // To allow cross-origin requests from Vite
+  origin: [
+    "https://occazionals.vercel.app", // Aapka Live Vercel Link
+    "http://localhost:5173",          // Local development link
+    "http://localhost:3000"           // Alternate local link
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// IMPORTANT: Body parsers (cors ke niche hone chahiye)
+app.use(express.json());        // To allow cross-origin requests from Vite
 
 // 2. ROUTES
 app.use('/api/auth', require('./routes/authRoutes'));
