@@ -18,7 +18,10 @@ const app = express();
 
 // 1. GLOBAL MIDDLEWARES
 app.use(express.json()); // To parse JSON bodies
-app.use(cors());         // To allow cross-origin requests from Vite
+app.use(cors({
+  origin: ["https://occazionals.vercel.app/"], // Apne Vercel link se replace karein
+  credentials: true
+}));         // To allow cross-origin requests from Vite
 
 // 2. ROUTES
 app.use('/api/auth', require('./routes/authRoutes'));
