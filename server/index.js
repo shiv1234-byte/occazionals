@@ -1,47 +1,38 @@
 require('dotenv').config();
-// ... rest of your imports
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const connectDB = require('./config/db'); // Ensure you have this file to connect to Atlas
+const connectDB = require('./config/db');
 const { errorHandler } = require('./middleware/errorMiddleware');
-
-
-
-// Load environment variables
-dotenv.config();
 
 // Connect to Database
 connectDB(); 
 
 const app = express();
 
-// 1. GLOBAL MIDDLEWARES
-app.use(express.json()); // To parse JSON bodies
-const cors = require('cors');
-
-// CORS configuration
+// 1. CORS CONFIGURATION (Sabse Pehle)
+// Isse browser ko permission milti hai data lene ki
 app.use(cors({
   origin: [
-    "https://occazionals.vercel.app", // Aapka Live Vercel Link
-    "http://localhost:5173",          // Local development link
-    "http://localhost:3000"           // Alternate local link
+    "https://occazionals.vercel.app", 
+    "http://localhost:5173", 
+    "http://localhost:3000"
   ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// IMPORTANT: Body parsers (cors ke niche hone chahiye)
-app.use(express.json());        // To allow cross-origin requests from Vite
+// 2. BODY PARSERS (CORS ke Niche)
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true }));
 
-// 2. ROUTES
+// 3. ROUTES
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/chatbot', require('./routes/chatbotRoutes'));
 
-// 3. ERROR HANDLING MIDDLEWARE (Must be after routes)
+// 4. ERROR HANDLING (Sabse Aakhri Mein)
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
