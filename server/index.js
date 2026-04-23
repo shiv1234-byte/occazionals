@@ -35,6 +35,7 @@ app.use('/api/chatbot', require('./routes/chatbotRoutes'));
 // 4. ERROR HANDLING (Sabse Aakhri Mein)
 app.use(errorHandler);
 
+// --- UPDATE 2: DYNAMIC PORT & HOST ---
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root { --primary: #db2777; --gold: #d4af37; --dark: #111827; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; }
+        body { font-family: 'Helvetica', sans-serif; background: #fff; padding: 40px; color: var(--dark); }
+        .invoice-wrapper { 
+            max-width: 800px; margin: auto; border: 1px solid #e5e7eb; 
+            border-radius: 20px; padding: 40px; position: relative; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+        }
+        .invoice-wrapper::before { 
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 8px; 
+            background: linear-gradient(90deg, var(--primary), var(--gold)); border-radius: 20px 20px 0 0;
+        }
+        header { display: flex; justify-content: space-between; margin-bottom: 50px; margin-top: 10px; }
+        .brand h1 { font-size: 26px; font-weight: 800; }
+        .brand h1 span { color: var(--primary); }
+        .brand p { font-size: 10px; letter-spacing: 2px; color: #6b7280; text-transform: uppercase; }
+        .meta { text-align: right; }
+        .meta h2 { color: var(--primary); font-size: 32px; margin-bottom: 5px; }
+        .info-grid { display: grid; grid-template-cols: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+        .info-block h3 { font-size: 10px; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th { background: #f9fafb; text-align: left; padding: 15px; font-size: 11px; color: #4b5563; }
+        td { padding: 18px 15px; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+        .total-box { margin-left: auto; width: 250px; }
+        .row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+        .grand { border-top: 2px solid var(--dark); margin-top: 10px; padding-top: 15px; font-weight: 800; color: var(--primary); font-size: 18px; }
+        footer { margin-top: 60px; border-top: 1px solid #f3f4f6; padding-top: 20px; display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="invoice-wrapper">
+        <header>
+            <div class="brand">
+                <h1>Occasionals <span>Jewels</span></h1>
+                <p>Exquisite Artificial & Kundan Jewelry</p>
+            </div>
+            <div class="meta">
+                <h2>INVOICE</h2>
+                <p>#<%= order._id.toString().slice(-8).toUpperCase() %></p>
+                <p><%= new Date(order.createdAt).toLocaleDateString('en-IN') %></p>
+            </div>
+        </header>
+        <div class="info-grid">
+            <div>
+                <h3>Billed To:</h3>
+                <p><strong><%= order.user.name %></strong><br><%= order.shippingAddress.address %><br><%= order.shippingAddress.city %> - <%= order.shippingAddress.postalCode %></p>
+            </div>
+            <div style="text-align: right;">
+                <h3>Payment:</h3>
+                <p><strong><%= order.paymentMethod %></strong><br>Status: <%= order.isPaid ? 'PAID' : 'COD (PENDING)' %></p>
+            </div>
+        </div>
+        <table>
+            <thead><tr><th>Description</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+            <tbody>
+                <% order.orderItems.forEach(item => { %>
+                <tr>
+                    <td><strong><%= item.name %></strong><br><small style="color:#9ca3af">Premium Collection</small></td>
+                    <td><%= item.qty %></td>
+                    <td>₹<%= item.price %></td>
+                    <td>₹<%= item.qty * item.price %></td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+        <div class="total-box">
+            <div class="row"><span>Subtotal:</span><span>₹<%= order.totalPrice - 50 %></span></div>
+            <div class="row"><span>Delivery:</span><span>₹50.00</span></div>
+            <div class="row grand"><span>Grand Total:</span><span>₹<%= order.totalPrice %></span></div>
+        </div>
+        <footer>
+            <div>support@occasionalsjewels.in<br>www.occasionalsjewels.in</div>
+            <div style="text-align: right; font-style: italic;">"Crafting Elegance for Every Occasion"</div>
+        </footer>
+    </div>
+</body>
+</html>

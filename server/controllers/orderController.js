@@ -1,79 +1,134 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
-const Order = require('../models/Order'); 
+const Order = require('../models/Order');
+const puppeteer = require('puppeteer');
+const ejs = require('ejs');
+const path = require('path');
+const twilio = require('twilio');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-exports.createRazorpayOrder = async (req, res) => {
-  const { amount } = req.body;
-  const options = {
-    amount: Math.round(amount * 100), // Ensure it's an integer
-    currency: "INR",
-    receipt: `receipt_${Date.now()}`,
-  };
+// Twilio Client Initialize
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
+// --- Notification Logic (Customer & Admin) ---
+const sendOrderAlerts = async (order) => {
   try {
-    const order = await razorpay.orders.create(options);
-    res.status(200).json(order);
-  } catch (error) {
-    console.error("Razorpay Order Error:", error);
-    res.status(500).json({ message: "Razorpay order creation failed", error });
+    // 1. Customer Notification
+    const customerMsg = `✨ *Occasionals Jewels* ✨\n\nHi ${order.user.name},\nOrder Confirm ho gaya hai! 💖\n\n🆔 Order ID: #${order._id.toString().slice(-8).toUpperCase()}\n💰 Total: ₹${order.totalPrice}\n\nThank you for choosing elegance!\nwww.occasionalsjewels.in`;
+
+    await client.messages.create({
+      from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
+      to: `whatsapp:+91${order.shippingAddress.phone}`,
+      body: customerMsg
+    });
+
+    // 2. Admin Notification (Aapke liye)
+    const adminMsg = `📢 *NAYA ORDER AAYA HAI!* 📢\n\n🆔 ID: ${order._id}\n👤 Customer: ${order.user.name}\n📞 Phone: ${order.shippingAddress.phone}\n💰 Amount: ₹${order.totalPrice}\n📍 City: ${order.shippingAddress.city}`;
+
+    await client.messages.create({
+      from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
+      to: `whatsapp:+917042011696`, // Aapka Number
+      body: adminMsg
+    });
+
+    console.log("✅ All WhatsApp Alerts Sent (Customer & Admin)");
+  } catch (err) {
+    console.error("❌ Notification Error:", err.message);
   }
 };
 
-exports.verifyOrder = async (req, res) => {
+// --- Create Razorpay Order ---
+exports.createRazorpayOrder = async (req, res) => {
   try {
-    const { 
-      razorpay_order_id, 
-      razorpay_payment_id, 
-      razorpay_signature, 
-      orderItems, 
-      amount 
-    } = req.body;
-
-    // 1. Verification Logic
-    const sign = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSign = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(sign.toString())
-      .digest("hex");
-
-    if (razorpay_signature === expectedSign) {
-      
-      // LOG THE DATA: Terminal mein check karein ki req.user._id mil raha hai ya nahi
-      console.log("User from protect middleware:", req.user);
-
-      const newOrder = new Order({
-        user: req.user._id,
-        orderItems: orderItems,
-        totalPrice: amount,
-        paymentInfo: {
-          id: razorpay_payment_id,
-          status: "Paid",
-        },
-        paidAt: Date.now(),
-        // AGAR aapke model mein ye fields required hain toh inhe add karein:
-        shippingAddress: req.body.shippingAddress || { address: "Not Provided", city: "NA", postalCode: "000000", country: "India" },
-        status: "Processing"
-      });
-
-      const savedOrder = await newOrder.save();
-      
-      return res.status(200).json({ 
-        success: true, 
-        message: "Payment verified and order saved!", 
-        order: savedOrder 
-      });
-    } else {
-      return res.status(400).json({ success: false, message: "Invalid signature!" });
-    }
+    const options = {
+      amount: Math.round(req.body.amount * 100),
+      currency: "INR",
+      receipt: `receipt_${Date.now()}`,
+    };
+    const order = await razorpay.orders.create(options);
+    res.status(200).json(order);
   } catch (error) {
-    // YEH LINE AAPKO TERMINAL MEIN ASLI ERROR DIKHAYEGI
-    console.error("DETAILED VERIFICATION ERROR:", error.message);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    res.status(500).json({ message: "Razorpay failed" });
+  }
+};
+
+// --- Save Order ---
+exports.addOrderItems = async (req, res) => {
+  try {
+    const { orderItems, shippingAddress, paymentMethod, totalPrice, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    
+    if (!orderItems || orderItems.length === 0) return res.status(400).json({ message: "No items" });
+
+    if (paymentMethod === 'Online') {
+      const sign = razorpay_order_id + "|" + razorpay_payment_id;
+      const expectedSign = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET).update(sign).digest("hex");
+      if (razorpay_signature !== expectedSign) return res.status(400).json({ message: "Invalid Signature" });
+    }
+
+    const newOrder = new Order({
+      user: req.user._id,
+      orderItems: orderItems.map(item => ({ ...item, orderType: "Sale" })),
+      shippingAddress, 
+      paymentMethod, 
+      totalPrice,
+      isPaid: paymentMethod === 'Online',
+      paidAt: paymentMethod === 'Online' ? Date.now() : null,
+      status: "Processing"
+    });
+
+    const savedOrder = await newOrder.save();
+    
+    // User details populate karke alerts bhejein
+    const fullOrder = await Order.findById(savedOrder._id).populate('user', 'name email');
+    
+    // Dono ko message bhej raha hai (Customer & Admin)
+    await sendOrderAlerts(fullOrder);
+
+    res.status(201).json({ success: true, order: savedOrder });
+  } catch (error) {
+    console.error("Save Error:", error.message);
+    res.status(500).json({ message: "Save Error", error: error.message });
+  }
+};
+
+// --- Generate Premium Invoice ---
+exports.generateInvoice = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate('user', 'name email');
+    if (!order) return res.status(404).send("Order not found");
+
+    const templatePath = path.join(process.cwd(), 'views', 'invoice.ejs');
+    const html = await ejs.renderFile(templatePath, { order }, { cache: false });
+
+    const browser = await puppeteer.launch({ 
+      headless: "new", 
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] 
+    });
+    
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+    
+    const pdfBuffer = await page.pdf({ 
+      format: 'A4', 
+      printBackground: true,
+      margin: { top: '0px', bottom: '0px' }
+    });
+
+    await browser.close();
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=Invoice_${order._id}.pdf`,
+      'Cache-Control': 'no-cache'
+    });
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("PDF Error:", error);
+    res.status(500).send("Invoice failed");
   }
 };
 
@@ -82,6 +137,21 @@ exports.getMyOrders = async (req, res) => {
     const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
     res.status(200).json(orders);
   } catch (error) {
-    res.status(500).json({ message: "Server Error fetching orders" });
+    res.status(500).json({ message: "Fetch failed" });
+  }
+};
+// Admin status update karega
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (order) {
+      order.status = req.body.status; // e.g., 'Shipped', 'Delivered'
+      const updatedOrder = await order.save();
+      res.json(updatedOrder);
+    } else {
+      res.status(404).json({ message: "Order not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

@@ -1,1 +1,19 @@
+
 @import "tailwindcss";
+
+@theme {
+  /* Aap yahan apne custom colors bhi add kar sakte ho */
+  --color-premium-pink: #db2777;
+}
+
+/* Ye line zaroori hai Dark Mode toggle ke liye */
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  @apply bg-white text-black transition-colors duration-500;
+}
+
+/* Dark mode colors define karo */
+.dark body {
+  @apply bg-gray-950 text-white;
+}

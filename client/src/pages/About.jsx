@@ -1,103 +1,139 @@
 import React from 'react';
-import { 
-  ShieldCheck, 
-  Truck, 
-  Leaf, 
-  Star, 
-  MapPin, 
-  Calendar, 
-  Sparkles, 
-  Search // Hum direct Search import kar rahe hain
-} from 'lucide-react';
-import { motion } from 'framer-motion';
+import logo from '../components/logo.jpeg'; 
+import { Gem, Heart, ShieldCheck, Star, Award, Zap, Coffee, Sparkles } from 'lucide-react';
 
 const About = () => {
   return (
-    <div className="pt-28 pb-20">
-      {/* Hero Section */}
-      <section className="px-6 py-20 bg-gray-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.span 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mb-4 block"
-          >
-            Redefining Fashion Consumption
-          </motion.span>
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl font-serif mb-8 leading-tight"
-          >
-            Luxury at your <br/> <span className="italic text-gray-400">Doorstep.</span>
-          </motion.h1>
+    <div className="pt-28 pb-20 bg-gray-50 dark:bg-gray-950 transition-colors duration-500">
+      
+      {/* --- Section 1: The Main Character Energy (Hero) --- */}
+      <div className="max-w-5xl mx-auto text-center px-6 mb-24">
+        <div className="mb-12 flex justify-center">
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-yellow-500 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-1000"></div>
+            <div className="relative w-48 h-48 md:w-60 md:h-60 rounded-full overflow-hidden shadow-2xl border-4 border-white dark:border-gray-800 bg-white dark:bg-gray-900">
+              <img 
+                src={logo} 
+                alt="Occasionals Logo" 
+                className="w-full h-full object-contain p-6 transition-transform duration-700 group-hover:scale-110" 
+              />
+            </div>
+          </div>
         </div>
-      </section>
+        
+        <h1 className="text-5xl md:text-7xl font-serif font-black tracking-tight text-gray-900 dark:text-white mb-4 uppercase">
+          Occasionals<span className="text-pink-600">.</span>
+        </h1>
+        <p className="text-[10px] md:text-xs tracking-[0.6em] text-pink-600 dark:text-pink-400 font-black mb-8">NO BS. JUST PREMIUM DRIP.</p>
+        <div className="w-24 h-1 bg-gray-900 dark:bg-white mx-auto mb-10 rounded-full"></div>
+        
+        <p className="max-w-3xl mx-auto text-xl md:text-2xl text-gray-600 dark:text-gray-400 italic leading-relaxed font-light">
+          "Drip so real, they’ll think it’s 24K. Because your vibe shouldn't cost a fortune."
+        </p>
+      </div>
 
-      {/* Brand Values */}
-      <section className="max-w-7xl mx-auto px-6 py-24 grid md:grid-cols-3 gap-16">
-        <div className="space-y-4 text-center md:text-left">
-          <div className="w-12 h-12 bg-black text-white flex items-center justify-center rounded-2xl mx-auto md:mx-0 shadow-xl">
-            <Leaf size={20} />
+      {/* --- Section 2: The Kota Story (Gen-Z Vibe) --- */}
+      <div className="bg-white dark:bg-gray-900 py-24 border-y border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-500">
+        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+          <div className="space-y-8">
+            <div className="inline-block px-4 py-1 rounded-full bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 text-[10px] font-bold uppercase tracking-widest">
+              Straight out of Kota 📍
+            </div>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 dark:text-white">
+              The Lore <br/><span className="text-pink-600 italic">Behind the Brand</span>
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">
+              Born in the study-vibes and student-hustle of **Kota, Rajasthan**, Occasionals started because we were tired of "aesthetic" jewelry that turns green in two days.
+            </p>
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg font-medium italic">
+              From late-night Chai sessions to becoming the official jewelry partner for your campus fests and wedding guest looks.
+            </p>
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">
+              We know the struggle: you want the **Grand Look** for your Instagram but have a student budget. That's why we curate Kundan, AD, and Anti-Tarnish sets that are literally fire.
+            </p>
           </div>
-          <h3 className="text-xl font-serif pt-2">Eco-Conscious</h3>
-          <p className="text-gray-500 text-sm leading-relaxed">
-            By promoting rentals over fast fashion, we help reduce the carbon footprint of the textile industry.
-          </p>
-        </div>
-        <div className="space-y-4 text-center md:text-left">
-          <div className="w-12 h-12 bg-black text-white flex items-center justify-center rounded-2xl mx-auto md:mx-0 shadow-xl">
-            <ShieldCheck size={20} />
-          </div>
-          <h3 className="text-xl font-serif pt-2">Pristine Quality</h3>
-          <p className="text-gray-500 text-sm leading-relaxed">
-            Every garment undergoes a rigorous 5-step sanitization process, ensuring brand-new condition.
-          </p>
-        </div>
-        <div className="space-y-4 text-center md:text-left">
-          <div className="w-12 h-12 bg-black text-white flex items-center justify-center rounded-2xl mx-auto md:mx-0 shadow-xl">
-            <Star size={20} />
-          </div>
-          <h3 className="text-xl font-serif pt-2">Curated Style</h3>
-          <p className="text-gray-500 text-sm leading-relaxed">
-            Our collection is hand-picked by fashion experts for your most special occasions.
-          </p>
-        </div>
-      </section>
 
-      {/* How it Works - Dark Section */}
-      <section className="bg-black text-white py-24 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-serif mb-16 text-center">The Journey</h2>
-          <div className="grid md:grid-cols-4 gap-12 text-center">
-            {[
-              { icon: <Search size={24}/>, title: "1. Select", desc: "Browse our premium designer catalog." },
-              { icon: <Calendar size={24}/>, title: "2. Reserve", desc: "Pick your dates. We deliver 24h early." },
-              { icon: <Sparkles size={24}/>, title: "3. Celebrate", desc: "Flaunt your look and make memories." },
-              { icon: <Truck size={24}/>, title: "4. Return", desc: "We'll pick it up. No cleaning needed." }
-            ].map((step, i) => (
-              <div key={i} className="space-y-4">
-                <div className="mx-auto w-16 h-16 border border-gray-800 rounded-full flex items-center justify-center text-gray-400 hover:bg-white hover:text-black transition-all">
-                  {step.icon}
-                </div>
-                <h4 className="font-bold uppercase tracking-widest text-[10px]">{step.title}</h4>
-                <p className="text-gray-500 text-xs leading-relaxed px-4">{step.desc}</p>
-              </div>
-            ))}
+          {/* The Black Card: The Brand Code */}
+          <div className="relative">
+            <div className="bg-[#121212] dark:bg-black p-10 md:p-14 rounded-[40px] shadow-2xl text-white transform md:rotate-2 border border-gray-800">
+              <h3 className="font-bold text-pink-500 mb-10 uppercase tracking-[0.3em] text-[10px] flex items-center gap-3">
+                <Sparkles size={18} /> THE OCCASIONALS CODE
+              </h3>
+              <ul className="space-y-12">
+                <li className="flex gap-6">
+                  <Zap size={28} className="text-pink-500 shrink-0" />
+                  <div>
+                    <p className="font-bold text-lg uppercase tracking-wider">Aesthetic & Durable</p>
+                    <p className="text-sm text-gray-400 font-light">Water-resistant and sweat-proof because we know Kota's heat is no joke.</p>
+                  </div>
+                </li>
+                <li className="flex gap-6">
+                  <Award size={28} className="text-pink-500 shrink-0" />
+                  <div>
+                    <p className="font-bold text-lg uppercase tracking-wider">Hustler Pricing</p>
+                    <p className="text-sm text-gray-400 font-light">Direct-to-consumer. No middlemen. Just honest prices for the youth.</p>
+                  </div>
+                </li>
+                <li className="flex gap-6">
+                  <Gem size={28} className="text-pink-500 shrink-0" />
+                  <div>
+                    <p className="font-bold text-lg uppercase tracking-wider">Curated Drip</p>
+                    <p className="text-sm text-gray-400 font-light">Limited drops. Unique designs. You won't find this on every other street.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Footer Contact */}
-      <section className="max-w-4xl mx-auto px-6 py-24 text-center">
-        <MapPin className="mx-auto text-gray-300 mb-6" size={40} />
-        <h2 className="text-3xl font-serif mb-4">Based in Delhi</h2>
-        <div className="flex flex-wrap justify-center gap-4 mt-8">
-          <div className="px-8 py-3 bg-gray-50 rounded-full text-[10px] font-bold uppercase tracking-widest border border-gray-100">DTU Campus, Rohini</div>
-          <div className="px-8 py-3 bg-gray-50 rounded-full text-[10px] font-bold uppercase tracking-widest border border-gray-100">hello@occazionals.com</div>
+      {/* --- Section 3: Why Us? (The Hype) --- */}
+      <div className="max-w-6xl mx-auto px-6 py-24">
+        <div className="text-center mb-20">
+          <h2 className="text-3xl md:text-5xl font-serif font-bold mb-4 text-gray-900 dark:text-white uppercase">The Hype is Real</h2>
+          <div className="w-20 h-1.5 bg-pink-600 mx-auto rounded-full"></div>
         </div>
-      </section>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+          <div className="group p-8 rounded-[32px] hover:bg-white dark:hover:bg-gray-900 hover:shadow-xl transition-all duration-500">
+            <div className="bg-pink-50 dark:bg-pink-900/20 text-pink-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8 transition-transform group-hover:rotate-12">
+              <Gem size={32} />
+            </div>
+            <h3 className="font-black text-gray-900 dark:text-white mb-4 tracking-[0.2em] text-xs">ELITE CATALOG</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+              From heavy-duty wedding sets to "quiet luxury" minimal pieces. We got it all.
+            </p>
+          </div>
+
+          <div className="group p-8 rounded-[32px] hover:bg-white dark:hover:bg-gray-900 hover:shadow-xl transition-all duration-500">
+            <div className="bg-pink-50 dark:bg-pink-900/20 text-pink-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8 transition-transform group-hover:rotate-12">
+              <Coffee size={32} />
+            </div>
+            <h3 className="font-black text-gray-900 dark:text-white mb-4 tracking-[0.2em] text-xs">MADE FOR HUSTLERS</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+              Founded by students, for students. We understand the value of every single rupee.
+            </p>
+          </div>
+
+          <div className="group p-8 rounded-[32px] hover:bg-white dark:hover:bg-gray-900 hover:shadow-xl transition-all duration-500">
+            <div className="bg-pink-50 dark:bg-pink-900/20 text-pink-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8 transition-transform group-hover:rotate-12">
+              <Zap size={32} />
+            </div>
+            <h3 className="font-black text-gray-900 dark:text-white mb-4 tracking-[0.2em] text-xs">EXPRESS VIBES</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+              Fast shipping from Kota across India. Because we know you need that look *ASAP*.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* --- Section 4: Final Shoutout --- */}
+      <div className="max-w-4xl mx-auto px-6 text-center border-t border-gray-100 dark:border-gray-800 pt-20">
+        <p className="text-gray-400 dark:text-gray-600 text-[10px] font-bold uppercase tracking-[0.5em]">
+          Stay Sparkling. Stay Real.
+        </p>
+      </div>
+
     </div>
   );
 };

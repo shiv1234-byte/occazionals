@@ -1,155 +1,143 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { Trash2, ShoppingBag, ArrowRight, CreditCard } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Cart = () => {
-  const { cartItems, removeFromCart, cartTotal, clearCart } = useCart();
-  const { user, token } = useAuth();
+  const { cartItems, removeFromCart, cartTotal } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  const handlePayment = async () => {
-    if (!user || !token) {
-      alert("Please login to proceed with the payment.");
+  const handleProceedToCheckout = () => {
+    if (!user) {
+      alert("Please login to proceed with your jewelry order.");
       navigate('/login');
       return;
     }
-
-    try {
-      // 1. Create Order on Backend
-      const { data: order } = await axios.post(
-        'http://localhost:5000/api/orders/pay', 
-        { amount: cartTotal },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      const options = {
-        key: "rzp_test_SA8wlqDgEIdnXA", 
-        amount: order.amount,
-        currency: order.currency,
-        name: "Occazionals",
-        description: "Premium Fashion Rental/Purchase",
-        order_id: order.id,
-        handler: async (response) => {
-          try {
-            // FIX: Map items to match your order.js schema exactly
-            const formattedItems = cartItems.map(item => ({
-              product: item._id,
-              // 'Rent' or 'Sale' must be capitalized to match your Enum in order.js
-              orderType: item.orderType === 'rent' ? 'Rent' : 'Sale',
-              price: item.orderType === 'rent' ? item.rentalPrice : item.salePrice,
-              rentalDuration: item.orderType === 'rent' ? 3 : 0
-            }));
-
-            const config = {
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-            };
-
-            // 2. Verify Payment
-            const { data } = await axios.post('http://localhost:5000/api/orders/verify', {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              orderItems: formattedItems, 
-              amount: cartTotal
-            }, config);
-
-            if (data.success) {
-              alert("Order Placed Successfully!");
-              clearCart();
-              navigate('/catalog');
-            }
-          } catch (error) {
-            console.error("Verification Error:", error.response?.data || error);
-            alert(`Order Failed: ${error.response?.data?.error || "Check console"}`);
-          }
-        },
-        prefill: {
-          name: user.name,
-          email: user.email,
-        },
-        theme: { color: "#000000" },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      console.error("Payment initiation failed:", err);
-      alert("Could not initialize payment.");
-    }
+    navigate('/checkout');
   };
 
   if (cartItems.length === 0) {
     return (
-      <div className="pt-40 pb-20 text-center px-6">
-        <ShoppingBag size={60} className="mx-auto text-gray-200 mb-6" />
-        <h2 className="text-3xl font-serif">Your bag is empty</h2>
-        <p className="text-gray-500 mt-2 mb-8">Discover something special.</p>
-        <Link to="/catalog" className="bg-black text-white px-8 py-3 rounded-full uppercase tracking-widest text-xs">
-          Explore Collection
+      <div className="pt-40 pb-20 text-center px-6 animate-in fade-in duration-700 bg-transparent dark:bg-gray-950 transition-colors duration-500 min-h-screen">
+        <div className="bg-pink-50 dark:bg-pink-900/10 w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-6">
+          <ShoppingBag size={60} className="text-pink-200 dark:text-pink-900/40" />
+        </div>
+        <h2 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Your jewelry box is empty</h2>
+        <p className="text-gray-400 dark:text-gray-500 mt-2 mb-10 tracking-widest uppercase text-[10px] font-black">Add some sparkle to your life</p>
+        <Link to="/catalog" className="bg-black dark:bg-pink-600 text-white px-10 py-4 rounded-full uppercase tracking-widest text-xs font-bold hover:bg-pink-600 dark:hover:bg-white dark:hover:text-black transition-all shadow-lg">
+          Explore Collections
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="pt-28 pb-16 px-6 max-w-7xl mx-auto min-h-screen">
-      <h1 className="text-4xl font-serif mb-12 text-center">Your Bag</h1>
+    <div className="pt-32 pb-16 px-6 max-w-7xl mx-auto min-h-screen bg-transparent dark:bg-gray-950 transition-colors duration-500">
+      <div className="flex items-baseline gap-4 mb-12">
+        <h1 className="text-4xl font-serif font-bold text-gray-900 dark:text-white">Shopping Bag</h1>
+        <span className="text-gray-400 dark:text-gray-500 text-sm">({cartItems.length} {cartItems.length === 1 ? 'Item' : 'Items'})</span>
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-16">
-        <div className="flex-2 space-y-8 w-full lg:w-2/3">
-          {cartItems.map((item) => (
-            <motion.div layout key={item.cartId} className="flex gap-6 border-b pb-8 group">
-              <div className="w-32 h-44 bg-gray-100 rounded-lg overflow-hidden shrink-0">
-                <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-medium">{item.name}</h3>
-                    <button onClick={() => removeFromCart(item.cartId)} className="text-gray-400 hover:text-red-500 transition">
-                      <Trash2 size={18} />
-                    </button>
+        {/* Cart Items List */}
+        <div className="lg:w-2/3 space-y-8">
+          <AnimatePresence>
+            {cartItems.map((item) => (
+              <motion.div 
+                layout 
+                initial={{ opacity: 0, x: -20 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                exit={{ opacity: 0, x: 20 }}
+                key={item.cartId} 
+                className="flex flex-col sm:flex-row gap-8 bg-white dark:bg-gray-900 p-6 rounded-[32px] border border-gray-100 dark:border-gray-800 group shadow-sm hover:shadow-md transition-all"
+              >
+                {/* Product Image */}
+                <div className="w-full sm:w-32 h-40 bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden shrink-0">
+                  <img 
+                    src={item.images[0]} 
+                    alt={item.name} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  />
+                </div>
+                
+                {/* Product Info */}
+                <div className="flex-1 flex flex-col justify-between py-1">
+                  <div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-[10px] text-pink-600 dark:text-pink-500 font-black uppercase tracking-[0.2em] mb-1">{item.category}</p>
+                        <h3 className="text-xl font-serif font-bold text-gray-900 dark:text-white leading-tight">{item.name}</h3>
+                      </div>
+                      <button 
+                        onClick={() => removeFromCart(item.cartId)} 
+                        className="p-3 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-full transition-all"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+                    
+                    {/* Trust Badges */}
+                    <div className="mt-4 flex flex-wrap items-center gap-4 text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                       <span className="flex items-center gap-1"><ShieldCheck size={14} className="text-green-500 dark:text-green-600"/> Certified Quality</span>
+                       <span className="flex items-center gap-1"><Truck size={14} className="text-blue-500 dark:text-blue-400"/> Insured Shipping</span>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1 uppercase tracking-tighter">Size: {item.selectedSize}</p>
-                  <div className="mt-2 inline-block px-3 py-1 bg-gray-50 border rounded-full text-[10px] font-bold uppercase tracking-widest">
-                    {item.orderType === 'rent' ? 'Rental (3 Days)' : 'Full Purchase'}
+                  
+                  <div className="flex justify-between items-end pt-4">
+                    <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase bg-gray-50 dark:bg-gray-800 px-3 py-1 rounded-full border border-transparent dark:border-gray-700">Quantity: 1</div>
+                    <p className="text-2xl font-serif font-bold text-gray-900 dark:text-white">₹{item.salePrice.toLocaleString('en-IN')}</p>
                   </div>
                 </div>
-                <div className="flex justify-between items-end">
-                  <p className="text-xl font-medium">₹{item.orderType === 'rent' ? item.rentalPrice : item.salePrice}</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
 
-        <div className="flex-1 lg:w-1/3">
-          <div className="bg-gray-50 p-8 rounded-2xl sticky top-28 shadow-sm">
-            <h2 className="text-xl font-serif mb-6">Summary</h2>
-            <div className="space-y-4 text-sm border-b pb-6">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Subtotal</span>
-                <span>₹{cartTotal}</span>
+        {/* Summary Card */}
+        <div className="lg:w-1/3">
+          <div className="bg-white dark:bg-gray-900 p-10 rounded-[40px] sticky top-32 shadow-2xl shadow-pink-100/20 dark:shadow-none border border-gray-50 dark:border-gray-800 transition-colors">
+            <h2 className="text-2xl font-serif font-bold mb-8 text-gray-900 dark:text-white">Order Summary</h2>
+            
+            <div className="space-y-4 text-sm border-b border-gray-100 dark:border-gray-800 pb-8">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 dark:text-gray-500 font-medium">Bag Subtotal</span>
+                <span className="font-bold text-gray-900 dark:text-white">₹{cartTotal.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Delivery</span>
-                <span className="text-green-600 font-medium">Free</span>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 dark:text-gray-500 font-medium">Shipping</span>
+                <span className="text-green-600 dark:text-green-500 font-black uppercase text-[10px] tracking-widest">Complimentary</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 dark:text-gray-500 font-medium">Estimated GST</span>
+                <span className="text-gray-900 dark:text-white font-bold italic">Included</span>
               </div>
             </div>
-            <div className="flex justify-between py-6 text-xl font-medium">
-              <span>Total</span>
-              <span>₹{cartTotal}</span>
+            
+            <div className="flex justify-between py-10">
+              <span className="text-xl font-serif font-bold text-gray-900 dark:text-white">Total Amount</span>
+              <span className="text-3xl font-serif font-bold text-pink-600 dark:text-pink-500">₹{cartTotal.toLocaleString('en-IN')}</span>
             </div>
-            <button onClick={handlePayment} className="w-full bg-black text-white py-5 rounded-2xl font-medium flex items-center justify-center gap-2 hover:bg-gray-800 transition shadow-xl group">
-              Proceed to Checkout <ArrowRight size={18} className="group-hover:translate-x-1 transition" />
+
+            <button 
+              onClick={handleProceedToCheckout} 
+              className="w-full bg-black dark:bg-pink-600 text-white py-6 rounded-[24px] font-bold uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 hover:bg-pink-600 dark:hover:bg-white dark:hover:text-black transition-all shadow-xl shadow-gray-200 dark:shadow-none group"
+            >
+              Proceed to Checkout <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
             </button>
+            
+            <div className="mt-8 flex flex-col items-center gap-4">
+               <div className="flex gap-2">
+                  <div className="h-1 w-8 bg-gray-100 dark:bg-gray-800 rounded-full"></div>
+                  <div className="h-1 w-8 bg-gray-100 dark:bg-gray-800 rounded-full"></div>
+                  <div className="h-1 w-8 bg-gray-100 dark:bg-gray-800 rounded-full"></div>
+               </div>
+               <p className="text-[9px] text-gray-400 dark:text-gray-600 font-bold uppercase tracking-widest text-center">
+                  Secure checkout with buyer protection
+               </p>
+            </div>
           </div>
         </div>
       </div>

@@ -1,44 +1,53 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const Product = require("../models/productModel");
 
-// Initialize Gemini with your API Key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-/**
- * @desc    Get AI response for user query
- * @route   POST /api/chatbot
- */
 exports.handleChat = async (req, res) => {
   const { query } = req.body;
-
-  if (!query) {
-    return res.status(400).json({ message: "Query is required" });
-  }
+  if (!query) return res.status(400).json({ message: "Query required" });
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // 1. Database se real data uthao
+    const products = await Product.find({}, "name availability price category");
+    
+    const inventory = products.length > 0 
+      ? products.map(p => `${p.name}: ${p.availability ? 'In Stock' : 'Booked'}, Price: ₹${p.price}`).join(" | ")
+      : "No items found in database.";
 
-    // SYSTEM INSTRUCTIONS: Setting the AI's personality
+      console.log("DEBUG INVENTORY DATA:", inventory);
+
+    // 2. Temperature 0.0 rakhein taaki AI apni 'fabulous' baatein na kare
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: { 
+        maxOutputTokens: 40, 
+        temperature: 0.0, // Creativity zero kar di
+        topP: 0.1 
+      } 
+    });
+
+    // 3. Strict Command Prompt
     const prompt = `
-      You are the AI assistant for "Occazionals", a premium luxury fashion rental and sales platform based in Delhi (DTU Campus).
+      COMMAND: You are a database query assistant for Occazionals. 
+      DATA: ${inventory}
       
-      Your rules:
-      1. Be polite, professional, and helpful.
-      2. Answer questions about: rental duration (usually 3 days), hygiene (5-step process), delivery (24h before event), and fashion advice.
-      3. If asked about something outside of fashion or Occazionals, politely bring the conversation back.
-      4. Keep answers concise (max 2-3 sentences).
-      
-      User Question: ${query}
-    `;
+      RULES:
+      - Answer ONLY using the DATA provided above.
+      - DO NOT use the words "Fabulous", "Occasional", "Shine", or "Exquisite".
+      - DO NOT give price ranges like 8000-25000 if they are not in the DATA.
+      - Answer in maximum 10 words.
+      - If user asks for price, look at the DATA and give the exact price.
+
+      User Query: ${query}
+      Assistant Answer:`;
 
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    let text = result.response.text().trim();
 
     res.status(200).json({ response: text });
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    res.status(500).json({ 
-      response: "I'm having trouble connecting to my brain right now. Please try again later!" 
-    });
+    console.error("Chat Error:", error);
+    res.status(500).json({ response: "Error: Database not responding." });
   }
 };

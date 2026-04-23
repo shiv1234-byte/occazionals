@@ -1,128 +1,125 @@
-import React, { useState, useEffect } from 'react';
-import { ShoppingBag, User, Menu, X, Search as SearchIcon, LogOut, Package } from 'lucide-react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { 
+  ShoppingBag, User, Menu, X, Heart, Search, LogOut 
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext'; // Ensure Path is correct
+import { useCart } from '../context/CartContext'; // Ensure Path is correct
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const { user, isAuthenticated, logout } = useAuth() || {};
-  const { cartItems } = useCart() || { cartItems: [] };
-  
+  const [isOpen, setIsOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const { cartItems } = useCart();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleSearchSubmit = (e) => {
-    if (e.key === 'Enter' && searchQuery.trim()) {
-      navigate(`/catalog?search=${searchQuery.trim()}`);
-      setIsSearchOpen(false);
-      setSearchQuery('');
-    }
-  };
-
-  const isHomePage = location.pathname === '/';
-  const textColor = (isScrolled || !isHomePage || isSearchOpen) ? 'text-black' : 'text-white';
+  const navLinks = [
+    { name: 'Home', path: '/' },
+    { name: 'Collections', path: '/catalog' },
+    { name: 'About', path: '/about' },
+  ];
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled || !isHomePage ? 'bg-white shadow-sm py-3' : 'bg-transparent py-5'}`}>
-      <div className="max-w-7xl auto px-6 flex justify-between items-center">
+    <nav className="fixed w-full z-[100] bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 transition-colors duration-500">
+      <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
         
-        {/* Left: Brand */}
-        <Link to="/" className={`text-2xl font-serif tracking-widest ${textColor}`}>
-          OCCAZIONALS
-        </Link>
+        {/* --- LEFT: HAMBURGER (Mobile Only) --- */}
+        <button 
+          className="md:hidden p-2 -ml-2 text-gray-900 dark:text-white"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
 
-        {/* Center: Navigation Links */}
-        {!isSearchOpen && (
-          <div className={`hidden md:flex items-center gap-8 ${textColor}`}>
-            <Link to="/catalog" className="text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-50 transition">
-              Catalog
-            </Link>
-            <Link to="/about" className="text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-50 transition">
-              About Us
-            </Link>
-            
-            {/* Conditional My Orders Link */}
-            {isAuthenticated && (
-              <Link to="/my-orders" className="text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-50 transition">
-                My Orders
-              </Link>
-            )}
+        {/* --- CENTER/LEFT: LOGO --- */}
+        <div className="flex items-center gap-12">
+          <Link to="/" className="text-2xl font-serif font-black tracking-tighter text-gray-900 dark:text-white">
+            OCCASIONALS<span className="text-pink-600">.</span>
+          </Link>
 
-            {user?.isAdmin && (
-              <Link to="/admin" className="text-[10px] font-bold uppercase tracking-[0.2em] text-red-500 hover:opacity-50 transition">
-                Admin
+          {/* Desktop Nav Links */}
+          <div className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => (
+              <Link 
+                key={link.name} 
+                to={link.path} 
+                className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-pink-600 dark:text-gray-400 dark:hover:text-pink-500 transition-colors"
+              >
+                {link.name}
               </Link>
-            )}
+            ))}
           </div>
-        )}
+        </div>
 
-        {/* Right: Icons (Search, Auth, Cart) */}
-        <div className="flex items-center space-x-6">
+        {/* --- RIGHT: ICONS (Always Visible) --- */}
+        <div className="flex items-center gap-4 md:gap-6">
           
-          {/* Search Toggle */}
-          <div className="flex items-center">
-            {isSearchOpen ? (
-              <div className="flex items-center bg-gray-100 rounded-full px-4 py-1.5 animate-in fade-in zoom-in duration-300">
-                <input 
-                  autoFocus
-                  type="text" 
-                  placeholder="Search collections..." 
-                  className="bg-transparent border-none outline-none text-sm w-32 md:w-64 text-black"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleSearchSubmit}
-                />
-                <X size={16} className="cursor-pointer text-gray-500" onClick={() => setIsSearchOpen(false)} />
-              </div>
-            ) : (
-              <SearchIcon 
-                size={20} 
-                className={`cursor-pointer hover:opacity-70 transition ${textColor}`} 
-                onClick={() => setIsSearchOpen(true)} 
-              />
-            )}
-          </div>
+          {/* Search - Hidden on very small screens */}
+          <button className="hidden sm:block p-2 text-gray-900 dark:text-white hover:text-pink-600 transition">
+            <Search size={20} />
+          </button>
 
-          {/* User Section */}
-          <div className={`hidden md:flex items-center gap-4 ${textColor}`}>
-            {isAuthenticated ? (
-              <div className="flex items-center gap-4 border-l pl-4 border-gray-200">
-                <div className="flex flex-col items-end">
-                  <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Member</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest">{user?.name?.split(' ')[0]}</span>
-                </div>
-                <button onClick={logout} className="hover:text-red-500 transition" title="Logout">
-                  <LogOut size={18}/>
-                </button>
-              </div>
-            ) : (
-              <Link to="/login" className="hover:opacity-70" title="Login">
-                <User size={20} />
-              </Link>
-            )}
-          </div>
+          {/* User Profile / Login */}
+          <Link to={user ? "/profile" : "/login"} className="p-2 text-gray-900 dark:text-white hover:text-pink-600 transition flex items-center gap-2">
+            <User size={20} />
+            {user && <span className="hidden lg:block text-[10px] font-bold uppercase tracking-widest">{user.name.split(' ')[0]}</span>}
+          </Link>
 
-          {/* Cart Icon */}
-          <Link to="/cart" className={`relative hover:opacity-70 transition ${textColor}`}>
+          {/* Cart with Badge */}
+          <Link to="/cart" className="relative p-2 text-gray-900 dark:text-white hover:text-pink-600 transition">
             <ShoppingBag size={20} />
             {cartItems?.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center border border-white">
+              <span className="absolute top-0 right-0 bg-pink-600 text-white text-[8px] font-bold h-4 w-4 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-950">
                 {cartItems.length}
               </span>
             )}
           </Link>
         </div>
       </div>
+
+      {/* --- MOBILE DROPDOWN MENU --- */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-20 left-0 w-full bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 shadow-xl md:hidden overflow-hidden"
+          >
+            <div className="p-8 flex flex-col gap-6">
+              {navLinks.map((link) => (
+                <Link 
+                  key={link.name} 
+                  to={link.path} 
+                  onClick={() => setIsOpen(false)}
+                  className="text-lg font-serif font-bold text-gray-900 dark:text-white"
+                >
+                  {link.name}
+                </Link>
+              ))}
+              
+              <div className="h-px bg-gray-100 dark:bg-gray-800 my-2" />
+              
+              {user ? (
+                <button 
+                  onClick={() => { logout(); setIsOpen(false); }}
+                  className="flex items-center gap-3 text-red-500 font-bold uppercase text-xs tracking-widest"
+                >
+                  <LogOut size={18} /> Logout Account
+                </button>
+              ) : (
+                <Link 
+                  to="/login" 
+                  onClick={() => setIsOpen(false)}
+                  className="w-full bg-black dark:bg-pink-600 text-white py-4 rounded-2xl text-center font-bold uppercase text-xs tracking-[0.2em]"
+                >
+                  Sign In
+                </Link>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

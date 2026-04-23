@@ -1,20 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const { 
+  addOrderItems, 
+  getMyOrders, 
   createRazorpayOrder, 
-  verifyOrder, // <--- You need to import this
-  getMyOrders 
+  generateInvoice,
+  updateOrderStatus // Ye bhi import karna zaroori hai
 } = require('../controllers/orderController');
-const { protect } = require('../middleware/authMiddleware');
 
+// --- DHAYAN DEIN: Yahan admin ko bhi destructure karein ---
+const { protect, admin } = require('../middleware/authMiddleware'); 
 
-// Route to create the order with Razorpay
-router.post('/pay', protect, createRazorpayOrder);
-
-// Route to verify the payment signature and save to MongoDB
-router.post('/verify', protect, verifyOrder); // <--- Add this line!
-
-// Route to fetch user's past orders
+// Routes
+router.post('/', protect, addOrderItems);
 router.get('/myorders', protect, getMyOrders);
+router.post('/razorpay', protect, createRazorpayOrder);
+router.get('/:id/invoice', protect, generateInvoice);
+
+// --- Status Update Route (Jo aapne abhi add kiya) ---
+router.put('/:id/status', protect, admin, updateOrderStatus);
 
 module.exports = router;

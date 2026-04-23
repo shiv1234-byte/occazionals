@@ -11,6 +11,10 @@ import Signup from './pages/Signup';
 import AdminDashboard from './pages/AdminDashboard';
 import Orders from './pages/Orders';
 import MyOrders from './pages/MyOrders';
+import BudgetSection from './components/BudgetSection';
+import Footer from './components/Footer';
+import Checkout from './pages/Checkout';
+import Profile from './pages/Profile';
 
 // 1. IS LINE KO ADD KAREIN (Ensure the path is correct)
 import ChatBot from './components/Chatbot'; 
@@ -23,7 +27,16 @@ function App() {
     <>
       <Navbar />
       <Routes>
-        <Route path="/" element={<Hero />} />
+        <Route 
+    path="/" 
+    element={
+      <>
+        <Hero />
+        <BudgetSection />
+      </>
+    } 
+  />
+        <Route path='/BudgetSection' element={<BudgetSection/>}/>
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/about" element={<About />} />
@@ -32,13 +45,18 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/my-orders" element={<MyOrders />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/profile" element={<Profile />} />
         {user?.isAdmin && (
           <Route path="/admin" element={<AdminDashboard />} />
+
         )}
       </Routes>
+     
 
       {/* 2. ChatBot yahan render ho raha hai */}
       <ChatBot /> 
+      <Footer/>
     </>
   );
 }
