@@ -2,22 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { MapPin, CreditCard, ChevronRight, ShieldCheck } from 'lucide-react';
+import API from '../axios'; // ✅ Central API Instance use kar rahe hain
+import { MapPin, CreditCard, ChevronRight, ShieldCheck, Loader2 } from 'lucide-react';
 
 const Checkout = () => {
-  const { cartItems, cartTotal, clearCart } = useCart();
+  const { cartItems, clearCart } = useCart();
   const { user, token } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [itemsToOrder, setItemsToOrder] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false); // ✅ Button loading state
+  
   const [address, setAddress] = useState({
     fullName: user?.name || '',
     phone: '',
     street: '',
-    city: 'Delhi',
+    city: 'Delhi', // Default
     pincode: '',
     state: 'Delhi'
   });
@@ -38,7 +40,7 @@ const Checkout = () => {
   }, [location.state, cartItems]);
 
   const subTotal = itemsToOrder.reduce((acc, item) => acc + (item.salePrice || item.price || 0), 0);
-  const deliveryCharge = 50;
+  const deliveryCharge = subTotal > 0 ? 50 : 0;
   const grandTotal = subTotal + deliveryCharge;
 
   const handlePlaceOrder = async (e) => {
@@ -47,7 +49,7 @@ const Checkout = () => {
     if (itemsToOrder.length === 0) return alert("Bag is empty!");
     if (!address.phone || !address.street || !address.pincode) return alert("Please fill address details.");
 
-    const config = { headers: { Authorization: `Bearer ${token}` } };
+    setIsProcessing(true); // Start loading
 
     const baseOrderData = {
       orderItems: itemsToOrder.map(item => ({
@@ -68,14 +70,15 @@ const Checkout = () => {
 
     try {
       if (paymentMethod === 'Online') {
-        const { data: rzpOrderData } = await axios.post('http://localhost:5000/api/orders/pay', { amount: grandTotal }, config);
+        // ✅ Localhost changed to API instance
+        const { data: rzpOrderData } = await API.post('/orders/pay', { amount: grandTotal });
 
         const options = {
-          key: "rzp_test_SA8wlqDgEIdnXA", 
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SA8wlqDgEIdnXA", 
           amount: rzpOrderData.amount,
           currency: rzpOrderData.currency,
           name: "Occasionals Jewels",
-          description: "Jewelry Purchase",
+          description: "Premium Jewelry Purchase",
           order_id: rzpOrderData.id,
           handler: async (response) => {
             try {
@@ -87,25 +90,34 @@ const Checkout = () => {
                 razorpay_signature: response.razorpay_signature
               };
 
-              const { data: successData } = await axios.post('http://localhost:5000/api/orders', finalData, config);
+              // ✅ Order verify and save via API instance
+              const { data: successData } = await API.post('/orders', finalData);
               if (successData.success) {
                 alert("Payment Successful! Order Placed.");
                 clearCart();
                 navigate('/my-orders');
               }
             } catch (err) {
-              alert("Payment Verification Failed!");
+              alert("Payment Verification Failed! Contact Support.");
             }
           },
           prefill: { name: user?.name, email: user?.email, contact: address.phone },
           theme: { color: "#db2777" }
         };
+
+        if (!window.Razorpay) {
+          alert("Razorpay SDK failed to load. Are you online?");
+          setIsProcessing(false);
+          return;
+        }
+
         const rzp = new window.Razorpay(options);
         rzp.open();
 
       } else {
+        // COD Logic
         const codData = { ...baseOrderData, paymentMethod: 'COD' };
-        const { data } = await axios.post('http://localhost:5000/api/orders', codData, config);
+        const { data } = await API.post('/orders', codData);
         if (data.success) {
           alert("COD Order Placed Successfully!");
           clearCart();
@@ -114,10 +126,17 @@ const Checkout = () => {
       }
     } catch (err) {
       alert("Error: " + (err.response?.data?.message || "Server error"));
+    } finally {
+      setIsProcessing(false); // Stop loading
     }
   };
 
-  if (loading) return <div className="pt-40 text-center dark:text-white">Loading Checkout...</div>;
+  if (loading) return (
+    <div className="pt-40 text-center dark:text-white flex flex-col items-center gap-4">
+      <Loader2 className="animate-spin text-pink-500" size={40} />
+      <p className="uppercase tracking-widest text-[10px] font-bold">Initializing Secure Checkout...</p>
+    </div>
+  );
 
   return (
     <div className="pt-32 pb-20 px-6 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 bg-transparent dark:bg-gray-950 transition-colors duration-500 min-h-screen">
@@ -132,7 +151,7 @@ const Checkout = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <input className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl outline-none text-gray-400 dark:text-gray-500 font-medium" value={address.fullName} readOnly />
-            <input required className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-transparent focus:border-pink-500 dark:text-white outline-none transition" placeholder="Phone Number" value={address.phone} onChange={e => setAddress({...address, phone: e.target.value})} />
+            <input required className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-transparent focus:border-pink-500 dark:text-white outline-none transition" placeholder="Phone Number (Required for shipping)" value={address.phone} onChange={e => setAddress({...address, phone: e.target.value})} />
             <input required className="md:col-span-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-transparent focus:border-pink-500 dark:text-white outline-none transition" placeholder="Full Address (House, Street, Landmark)" value={address.street} onChange={e => setAddress({...address, street: e.target.value})} />
             <input className="p-4 bg-gray-100 dark:bg-gray-800/50 rounded-2xl outline-none text-gray-400 dark:text-gray-500" value={address.city} readOnly />
             <input required className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-transparent focus:border-pink-500 dark:text-white outline-none transition" placeholder="Pincode" value={address.pincode} onChange={e => setAddress({...address, pincode: e.target.value})} />
@@ -195,9 +214,11 @@ const Checkout = () => {
           </div>
           <button 
             onClick={handlePlaceOrder} 
-            className="w-full bg-black dark:bg-pink-600 text-white py-6 rounded-3xl font-bold uppercase tracking-widest text-[10px] mt-8 hover:bg-pink-600 dark:hover:bg-white dark:hover:text-black transition-all flex items-center justify-center gap-2 group"
+            disabled={isProcessing}
+            className="w-full bg-black dark:bg-pink-600 text-white py-6 rounded-3xl font-bold uppercase tracking-widest text-[10px] mt-8 hover:bg-pink-600 dark:hover:bg-white dark:hover:text-black transition-all flex items-center justify-center gap-2 group disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Confirm Order <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            {isProcessing ? <Loader2 className="animate-spin" size={18}/> : "Confirm Order"} 
+            <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </button>
           <div className="mt-6 flex items-center justify-center gap-2 text-[9px] text-gray-400 dark:text-gray-600 font-bold uppercase tracking-widest">
             <ShieldCheck size={14} className="text-green-500" /> Secure SSL Checkout

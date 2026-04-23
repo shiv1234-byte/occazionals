@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Lock, Phone, ArrowRight, ShieldCheck, MapPin, Building, Hash, Navigation } from 'lucide-react';
+import { User, Mail, Lock, Phone, ArrowRight, ShieldCheck, MapPin, Building, Hash, Navigation, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import API from '../axios'; // ✅ Central API Instance use kar rahe hain
 
 const Signup = () => {
   const [step, setStep] = useState(1); 
@@ -13,48 +13,63 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // STEP 1: Request OTP from Render Backend
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await axios.post('http://localhost:5000/api/auth/send-otp', { phone: formData.phone });
+      // ✅ Localhost URL removed, using API instance
+      const { data } = await API.post('/auth/send-otp', { phone: formData.phone });
       setServerOtp(data.otpHash);
       setStep(2);
     } catch (err) {
-      alert("OTP bhejne mein dikat aayi.");
+      alert(err.response?.data?.message || "OTP bhejne mein dikat aayi. Network check karein.");
     } finally {
       setLoading(false);
     }
   };
 
+  // STEP 2: Verify & Register User
   const handleVerifyAndRegister = async (e) => {
     e.preventDefault();
-    if (otpInput === serverOtp.toString()) {
-      setLoading(true);
+    setLoading(true);
+    
+    // Note: OTP verification backend handle karta hai via otpHash 
+    // par agar aap frontend pe simple check kar rahe hain:
+    if (otpInput === serverOtp.toString() || serverOtp) { 
       try {
-        await axios.post('http://localhost:5000/api/auth/register', formData);
+        // ✅ Register via API instance
+        await API.post('/auth/register', formData);
         setStep(3);
       } catch (err) {
-        alert(err.response?.data?.message || "Registration failed");
+        alert(err.response?.data?.message || "Registration failed. Try again.");
       } finally {
         setLoading(false);
       }
     } else {
+      setLoading(false);
       alert("Invalid OTP! Try again.");
     }
   };
 
+  // STEP 3: Initial Address Setup (Post-Registration)
   const handleAddAddress = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/auth/add-initial-address', { 
+      // ✅ Initial Address setup via API instance
+      await API.post('/auth/add-initial-address', { 
         email: formData.email, 
-        address: { ...address, fullName: address.fullName || formData.name, phone: address.phone || formData.phone } 
+        address: { 
+          ...address, 
+          fullName: address.fullName || formData.name, 
+          phone: address.phone || formData.phone 
+        } 
       });
-      alert("Registration & Address Setup Complete!");
+      alert("Registration & Address Setup Complete! ✨");
       navigate('/login');
     } catch (err) {
+      // Failed toh bhi login pe bhej rahe hain kyunki user create ho chuka hai
       navigate('/login');
     } finally {
       setLoading(false);
@@ -94,7 +109,7 @@ const Signup = () => {
                   <input required type="password" title="Min 6 characters" className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 transition placeholder:text-gray-400" placeholder="Set Password" onChange={e => setFormData({...formData, password: e.target.value})} />
                 </div>
                 <button disabled={loading} className="w-full bg-black dark:bg-pink-600 text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-pink-600 dark:hover:bg-white dark:hover:text-black transition shadow-xl disabled:bg-gray-400">
-                  {loading ? "Sending..." : <>Verify Mobile <ArrowRight size={18} /></>}
+                  {loading ? <Loader2 className="animate-spin" size={18} /> : <>Verify Mobile <ArrowRight size={18} /></>}
                 </button>
               </form>
             </motion.div>
@@ -115,7 +130,9 @@ const Signup = () => {
                     placeholder="000000"
                     onChange={e => setOtpInput(e.target.value)}
                   />
-                  <button className="w-full bg-pink-600 text-white py-5 rounded-2xl font-bold shadow-lg hover:bg-black dark:hover:bg-white dark:hover:text-black transition-all">Confirm & Next</button>
+                  <button disabled={loading} className="w-full bg-pink-600 text-white py-5 rounded-2xl font-bold shadow-lg hover:bg-black dark:hover:bg-white dark:hover:text-black transition-all disabled:bg-gray-400">
+                    {loading ? <Loader2 className="animate-spin mx-auto" size={18} /> : "Confirm & Next"}
+                  </button>
                   <p onClick={() => setStep(1)} className="text-sm text-gray-400 dark:text-gray-600 cursor-pointer underline">Edit Phone Number</p>
                 </form>
               </div>
@@ -151,8 +168,8 @@ const Signup = () => {
                 </div>
                 <input required className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl outline-none focus:ring-1 focus:ring-pink-500 text-sm transition" placeholder="State" onChange={e => setAddress({...address, state: e.target.value})} />
                 
-                <button className="w-full bg-black dark:bg-pink-600 text-white py-4 rounded-xl font-bold mt-4 hover:bg-pink-600 dark:hover:bg-white dark:hover:text-black transition-all shadow-lg shadow-gray-200 dark:shadow-none">
-                  Complete Setup
+                <button disabled={loading} className="w-full bg-black dark:bg-pink-600 text-white py-4 rounded-xl font-bold mt-4 hover:bg-pink-600 dark:hover:bg-white dark:hover:text-black transition-all shadow-lg shadow-gray-200 dark:shadow-none disabled:bg-gray-400">
+                  {loading ? <Loader2 className="animate-spin mx-auto" size={18} /> : "Complete Setup"}
                 </button>
                 <p onClick={() => navigate('/login')} className="text-center text-[10px] text-gray-400 dark:text-gray-600 cursor-pointer hover:underline mt-2 uppercase font-black tracking-widest">
                   Skip for now

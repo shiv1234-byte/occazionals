@@ -1,126 +1,145 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  ShoppingBag, User, Menu, X, Heart, Search, LogOut 
+  ShoppingBag, User, Menu, X, Search, LogOut, Info, Layers, Sun, Moon 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext'; // Ensure Path is correct
-import { useCart } from '../context/CartContext'; // Ensure Path is correct
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+  
   const { user, logout } = useAuth();
   const { cartItems } = useCart();
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Collections', path: '/catalog' },
-    { name: 'About', path: '/about' },
+    { name: 'Collections', path: '/catalog', icon: <Layers size={18} /> },
+    { name: 'About Us', path: '/about', icon: <Info size={18} /> },
   ];
 
   return (
-    <nav className="fixed w-full z-[100] bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 transition-colors duration-500">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-        
-        {/* --- LEFT: HAMBURGER (Mobile Only) --- */}
-        <button 
-          className="md:hidden p-2 -ml-2 text-gray-900 dark:text-white"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-
-        {/* --- CENTER/LEFT: LOGO --- */}
-        <div className="flex items-center gap-12">
-          <Link to="/" className="text-2xl font-serif font-black tracking-tighter text-gray-900 dark:text-white">
-            OCCASIONALS<span className="text-pink-600">.</span>
-          </Link>
-
-          {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.name} 
-                to={link.path} 
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-pink-600 dark:text-gray-400 dark:hover:text-pink-500 transition-colors"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* --- RIGHT: ICONS (Always Visible) --- */}
-        <div className="flex items-center gap-4 md:gap-6">
+    <>
+      <nav className="fixed top-0 left-0 w-full z-[9999] bg-white dark:bg-[#0a0a0a] border-b border-gray-100 dark:border-gray-800 h-20 flex items-center shadow-md">
+        <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between">
           
-          {/* Search - Hidden on very small screens */}
-          <button className="hidden sm:block p-2 text-gray-900 dark:text-white hover:text-pink-600 transition">
-            <Search size={20} />
-          </button>
+          {/* --- MOBILE: Hamburger Menu --- */}
+          <div className="flex md:hidden">
+            <button 
+              onClick={() => setIsOpen(true)} 
+              className="p-3 bg-pink-600 text-white rounded-xl shadow-lg"
+            >
+              <Menu size={24} />
+            </button>
+          </div>
 
-          {/* User Profile / Login */}
-          <Link to={user ? "/profile" : "/login"} className="p-2 text-gray-900 dark:text-white hover:text-pink-600 transition flex items-center gap-2">
-            <User size={20} />
-            {user && <span className="hidden lg:block text-[10px] font-bold uppercase tracking-widest">{user.name.split(' ')[0]}</span>}
-          </Link>
-
-          {/* Cart with Badge */}
-          <Link to="/cart" className="relative p-2 text-gray-900 dark:text-white hover:text-pink-600 transition">
-            <ShoppingBag size={20} />
-            {cartItems?.length > 0 && (
-              <span className="absolute top-0 right-0 bg-pink-600 text-white text-[8px] font-bold h-4 w-4 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-950">
-                {cartItems.length}
+          {/* --- CENTER/LEFT: LOGO & DESKTOP LINKS --- */}
+          <div className="flex items-center gap-10">
+            <Link to="/" className="flex items-center">
+              <span className="text-xl md:text-2xl font-serif font-black tracking-tighter text-gray-900 dark:text-white uppercase">
+                OCCASIONALS<span className="text-pink-600">.</span>
               </span>
-            )}
-          </Link>
-        </div>
-      </div>
+            </Link>
 
-      {/* --- MOBILE DROPDOWN MENU --- */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-20 left-0 w-full bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 shadow-xl md:hidden overflow-hidden"
-          >
-            <div className="p-8 flex flex-col gap-6">
+            {/* ✅ DESKTOP LINKS (Ye ab visible honge desktop screen par) */}
+            <div className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => (
                 <Link 
                   key={link.name} 
                   to={link.path} 
-                  onClick={() => setIsOpen(false)}
-                  className="text-lg font-serif font-bold text-gray-900 dark:text-white"
+                  className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-pink-600 dark:text-gray-400 dark:hover:text-pink-500 transition-colors"
                 >
                   {link.name}
                 </Link>
               ))}
-              
-              <div className="h-px bg-gray-100 dark:bg-gray-800 my-2" />
-              
+            </div>
+          </div>
+
+          {/* --- RIGHT: THEME, SEARCH, ACCOUNT, CART --- */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            
+            {/* Theme Toggle */}
+            <button onClick={() => setDarkMode(!darkMode)} className="p-2 text-gray-800 dark:text-white hover:text-pink-600">
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
+            {/* Search */}
+            <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="p-2 text-gray-800 dark:text-white hover:text-pink-600">
+              <Search size={20} />
+            </button>
+
+            {/* ✅ DESKTOP ACCOUNT/LOGOUT INFO */}
+            <div className="hidden md:flex items-center gap-4 border-l border-gray-100 dark:border-gray-800 pl-4">
               {user ? (
-                <button 
-                  onClick={() => { logout(); setIsOpen(false); }}
-                  className="flex items-center gap-3 text-red-500 font-bold uppercase text-xs tracking-widest"
-                >
-                  <LogOut size={18} /> Logout Account
-                </button>
+                <div className="flex items-center gap-4">
+                  <Link to="/profile" className="text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:text-pink-500">
+                    My Account
+                  </Link>
+                  <button onClick={logout} className="text-red-500 hover:scale-110 transition">
+                    <LogOut size={18} />
+                  </button>
+                </div>
               ) : (
-                <Link 
-                  to="/login" 
-                  onClick={() => setIsOpen(false)}
-                  className="w-full bg-black dark:bg-pink-600 text-white py-4 rounded-2xl text-center font-bold uppercase text-xs tracking-[0.2em]"
-                >
-                  Sign In
+                <Link to="/login" className="text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:text-pink-500">
+                  Login
                 </Link>
               )}
             </div>
-          </motion.div>
+
+            {/* Cart Icon */}
+            <Link to="/cart" className="relative p-2 text-gray-800 dark:text-white hover:text-pink-600">
+              <ShoppingBag size={22} />
+              {cartItems?.length > 0 && (
+                <span className="absolute top-0 right-0 bg-pink-600 text-white text-[8px] font-bold h-4 w-4 rounded-full flex items-center justify-center border-2 border-white dark:border-[#0a0a0a]">
+                  {cartItems.length}
+                </span>
+              )}
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* --- SIDEBAR DRAWER (FOR MOBILE) --- */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOpen(false)} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10001]" />
+            <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'tween' }} className="fixed top-0 left-0 w-[80%] max-w-[300px] h-screen bg-white dark:bg-[#0a0a0a] z-[10002] shadow-2xl p-8 flex flex-col" >
+              <div className="flex justify-between items-center mb-10">
+                <span className="font-serif font-black text-xl dark:text-white uppercase">Menu</span>
+                <button onClick={() => setIsOpen(false)} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full dark:text-white"><X size={20} /></button>
+              </div>
+              <div className="flex flex-col gap-8">
+                {navLinks.map((link) => (
+                  <Link key={link.name} to={link.path} onClick={() => setIsOpen(false)} className="flex items-center gap-4 text-xl font-bold dark:text-white hover:text-pink-600">
+                    <span className="text-pink-600">{link.icon}</span> {link.name}
+                  </Link>
+                ))}
+                <hr className="dark:border-gray-800" />
+                {user ? (
+                  <div className="space-y-8">
+                    <Link to="/profile" onClick={() => setIsOpen(false)} className="flex items-center gap-4 text-lg font-bold dark:text-gray-400"><User size={20} className="text-pink-600"/> My Account</Link>
+                    <button onClick={() => { logout(); setIsOpen(false); }} className="flex items-center gap-4 text-lg font-bold text-red-500 uppercase tracking-widest"><LogOut size={20} /> Logout</button>
+                  </div>
+                ) : (
+                  <Link to="/login" onClick={() => setIsOpen(false)} className="w-full bg-pink-600 text-white py-4 rounded-2xl text-center font-bold uppercase tracking-widest">Sign In</Link>
+                )}
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
-    </nav>
+    </>
   );
 };
 

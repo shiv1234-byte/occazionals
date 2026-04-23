@@ -11,8 +11,11 @@ const app = express();
 
 // 1. CORS CONFIGURATION (Sabse Pehle)
 // Isse browser ko permission milti hai data lene ki
+// server.js update
 app.use(cors({
   origin: [
+    "https://occasionalsjewels.in",      // ✅ Aapka Hostinger Domain (Zaroori)
+    "https://www.occasionalsjewels.in",  // ✅ www version bhi add karein
     "https://occazionals.vercel.app", 
     "http://localhost:5173", 
     "http://localhost:3000"

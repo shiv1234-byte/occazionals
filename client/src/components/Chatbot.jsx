@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Bot } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { API_URL } from '../utils/config';
-
-const API_URL = import.meta.env.PROD 
-  ? "https://Occasionals.onrender.com/api/chatbot" 
-  : "http://localhost:5000/api/chatbot";
+import API from '../axios'; // ✅ Central API Instance (Localhost/Render handles automatically)
+import { useAuth } from '../context/AuthContext'; // User name ke liye
 
 const Chatbot = () => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -40,12 +38,8 @@ const Chatbot = () => {
     setIsTyping(true);
 
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: messageText }),
-      });
-      const data = await response.json();
+      // ✅ Using central API instance instead of fetch
+      const { data } = await API.post('/chatbot', { query: messageText });
       
       const botMessage = { 
         text: data.response || "I'm having trouble understanding. Could you rephrase?", 
@@ -53,7 +47,7 @@ const Chatbot = () => {
       };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      setMessages((prev) => [...prev, { text: "Server connection lost.", sender: 'bot' }]);
+      setMessages((prev) => [...prev, { text: "Server connection lost. Please check your internet.", sender: 'bot' }]);
     } finally {
       setIsTyping(false);
     }
@@ -61,7 +55,7 @@ const Chatbot = () => {
 
   return (
     <>
-      {/* Floating Toggle Button - Adaptive Colors */}
+      {/* Floating Toggle Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 z-[999] bg-black dark:bg-pink-600 text-white p-4 rounded-full shadow-2xl transition-colors duration-500"
@@ -80,7 +74,7 @@ const Chatbot = () => {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="fixed bottom-24 right-6 z-[999] w-[90vw] sm:w-[350px] h-[500px] max-h-[70vh] bg-white dark:bg-[#1a1a1a] rounded-[32px] shadow-2xl flex flex-col overflow-hidden border border-gray-100 dark:border-gray-800 transition-colors duration-500"
           >
-            {/* Header - Pink Accent for Brand Feel */}
+            {/* Header */}
             <div className="bg-black dark:bg-black text-white p-5 flex items-center justify-between shrink-0 border-b border-white/5">
               <div className="flex items-center gap-3">
                 <div className="bg-pink-600 p-2 rounded-xl">
@@ -99,7 +93,7 @@ const Chatbot = () => {
               </button>
             </div>
 
-            {/* Messages Area - Dark Mode Ready */}
+            {/* Messages Area */}
             <div 
               ref={scrollRef}
               className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50/50 dark:bg-transparent scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800"
@@ -146,7 +140,7 @@ const Chatbot = () => {
               )}
             </div>
 
-            {/* Input Area - Adaptive */}
+            {/* Input Area */}
             <div className="p-4 bg-white dark:bg-[#1a1a1a] border-t border-gray-100 dark:border-gray-800 shrink-0">
               <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-900 rounded-2xl px-4 py-2">
                 <input

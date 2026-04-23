@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,21 +12,29 @@ const Cart = () => {
 
   const handleProceedToCheckout = () => {
     if (!user) {
+      // Login par bhejte waqt current page yaad rakhein taaki login ke baad wapas cart pe aaye
       alert("Please login to proceed with your jewelry order.");
-      navigate('/login');
+      navigate('/login', { state: { from: '/cart' } }); 
       return;
     }
     navigate('/checkout');
   };
 
+  // EMPTY CART STATE
   if (cartItems.length === 0) {
     return (
       <div className="pt-40 pb-20 text-center px-6 animate-in fade-in duration-700 bg-transparent dark:bg-gray-950 transition-colors duration-500 min-h-screen">
-        <div className="bg-pink-50 dark:bg-pink-900/10 w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-6">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-pink-50 dark:bg-pink-900/10 w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-6"
+        >
           <ShoppingBag size={60} className="text-pink-200 dark:text-pink-900/40" />
-        </div>
+        </motion.div>
         <h2 className="text-3xl font-serif font-bold text-gray-900 dark:text-white">Your jewelry box is empty</h2>
-        <p className="text-gray-400 dark:text-gray-500 mt-2 mb-10 tracking-widest uppercase text-[10px] font-black">Add some sparkle to your life</p>
+        <p className="text-gray-400 dark:text-gray-500 mt-2 mb-10 tracking-widest uppercase text-[10px] font-black flex items-center justify-center gap-2">
+          <Sparkles size={12} className="text-pink-500"/> Add some sparkle to your life <Sparkles size={12} className="text-pink-500"/>
+        </p>
         <Link to="/catalog" className="bg-black dark:bg-pink-600 text-white px-10 py-4 rounded-full uppercase tracking-widest text-xs font-bold hover:bg-pink-600 dark:hover:bg-white dark:hover:text-black transition-all shadow-lg">
           Explore Collections
         </Link>
@@ -38,21 +46,23 @@ const Cart = () => {
     <div className="pt-32 pb-16 px-6 max-w-7xl mx-auto min-h-screen bg-transparent dark:bg-gray-950 transition-colors duration-500">
       <div className="flex items-baseline gap-4 mb-12">
         <h1 className="text-4xl font-serif font-bold text-gray-900 dark:text-white">Shopping Bag</h1>
-        <span className="text-gray-400 dark:text-gray-500 text-sm">({cartItems.length} {cartItems.length === 1 ? 'Item' : 'Items'})</span>
+        <span className="text-gray-400 dark:text-gray-500 text-sm font-medium tracking-tighter">
+          ({cartItems.length} {cartItems.length === 1 ? 'Item' : 'Items'})
+        </span>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-16">
         {/* Cart Items List */}
         <div className="lg:w-2/3 space-y-8">
-          <AnimatePresence>
+          <AnimatePresence mode='popLayout'>
             {cartItems.map((item) => (
               <motion.div 
                 layout 
-                initial={{ opacity: 0, x: -20 }} 
-                animate={{ opacity: 1, x: 0 }} 
-                exit={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                exit={{ opacity: 0, scale: 0.9 }}
                 key={item.cartId} 
-                className="flex flex-col sm:flex-row gap-8 bg-white dark:bg-gray-900 p-6 rounded-[32px] border border-gray-100 dark:border-gray-800 group shadow-sm hover:shadow-md transition-all"
+                className="flex flex-col sm:flex-row gap-8 bg-white dark:bg-gray-900 p-6 rounded-[32px] border border-gray-100 dark:border-gray-800 group shadow-sm hover:shadow-md transition-all relative overflow-hidden"
               >
                 {/* Product Image */}
                 <div className="w-full sm:w-32 h-40 bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden shrink-0">
@@ -60,6 +70,7 @@ const Cart = () => {
                     src={item.images[0]} 
                     alt={item.name} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                    onError={(e) => {e.target.src = 'https://placehold.co/400x400?text=Jewelry'}}
                   />
                 </div>
                 
@@ -74,6 +85,7 @@ const Cart = () => {
                       <button 
                         onClick={() => removeFromCart(item.cartId)} 
                         className="p-3 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-full transition-all"
+                        title="Remove Item"
                       >
                         <Trash2 size={20} />
                       </button>
@@ -82,7 +94,7 @@ const Cart = () => {
                     {/* Trust Badges */}
                     <div className="mt-4 flex flex-wrap items-center gap-4 text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                        <span className="flex items-center gap-1"><ShieldCheck size={14} className="text-green-500 dark:text-green-600"/> Certified Quality</span>
-                       <span className="flex items-center gap-1"><Truck size={14} className="text-blue-500 dark:text-blue-400"/> Insured Shipping</span>
+                       <span className="flex items-center gap-1"><Truck size={14} className="text-blue-500 dark:text-blue-400"/> Kota Hub Dispatch</span>
                     </div>
                   </div>
                   
@@ -111,7 +123,7 @@ const Cart = () => {
                 <span className="text-green-600 dark:text-green-500 font-black uppercase text-[10px] tracking-widest">Complimentary</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-400 dark:text-gray-500 font-medium">Estimated GST</span>
+                <span className="text-gray-400 dark:text-gray-500 font-medium">Estimated GST (3%)</span>
                 <span className="text-gray-900 dark:text-white font-bold italic">Included</span>
               </div>
             </div>
@@ -130,12 +142,12 @@ const Cart = () => {
             
             <div className="mt-8 flex flex-col items-center gap-4">
                <div className="flex gap-2">
-                  <div className="h-1 w-8 bg-gray-100 dark:bg-gray-800 rounded-full"></div>
-                  <div className="h-1 w-8 bg-gray-100 dark:bg-gray-800 rounded-full"></div>
-                  <div className="h-1 w-8 bg-gray-100 dark:bg-gray-800 rounded-full"></div>
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-1 w-8 bg-gray-100 dark:bg-gray-800 rounded-full"></div>
+                  ))}
                </div>
                <p className="text-[9px] text-gray-400 dark:text-gray-600 font-bold uppercase tracking-widest text-center">
-                  Secure checkout with buyer protection
+                 Secure checkout with buyer protection
                </p>
             </div>
           </div>

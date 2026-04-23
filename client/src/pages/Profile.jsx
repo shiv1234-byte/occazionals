@@ -1,34 +1,53 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Phone, MapPin, Plus, Trash2, Home, ShieldCheck } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Plus, Trash2, Home, ShieldCheck, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import API from '../axios'; // ✅ Central API Instance use kar rahe hain
 
 const Profile = () => {
   const { user, token, login } = useAuth(); 
   const [showAddAddress, setShowAddAddress] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // ✅ Address save loading state
   const [newAddress, setNewAddress] = useState({
     fullName: '', phone: '', street: '', city: '', pincode: '', state: ''
   });
 
   const handleAddAddress = async (e) => {
     e.preventDefault();
+    setIsSaving(true);
     try {
-      const { data } = await axios.post('http://localhost:5000/api/auth/add-address', newAddress, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // ✅ URL updated to use API instance
+      const { data } = await API.post('/auth/add-address', newAddress);
+      
       if (data.success) {
+        // Update user context with new addresses
         login({ ...user, addresses: data.addresses }, token);
         setShowAddAddress(false);
         setNewAddress({ fullName: '', phone: '', street: '', city: '', pincode: '', state: '' });
+        alert("Address successfully saved! ✨");
       }
     } catch (err) {
-      alert("Address save nahi ho paya!");
+      alert(err.response?.data?.message || "Address save nahi ho paya!");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ✅ Function to delete address (Optional but recommended)
+  const handleDeleteAddress = async (addressId) => {
+    if(!window.confirm("Are you sure you want to delete this address?")) return;
+    try {
+      const { data } = await API.delete(`/auth/address/${addressId}`);
+      if (data.success) {
+        login({ ...user, addresses: data.addresses }, token);
+      }
+    } catch (err) {
+      alert("Address delete karne mein problem aayi.");
     }
   };
 
   if (!user) return (
-    <div className="pt-40 text-center font-serif text-gray-500 dark:text-gray-400 min-h-screen dark:bg-gray-950 transition-colors duration-500">
+    <div className="pt-40 text-center font-serif text-gray-500 dark:text-gray-400 min-h-screen bg-white dark:bg-gray-950 transition-colors duration-500">
       Account details dekhne ke liye login karein.
     </div>
   );
@@ -89,13 +108,15 @@ const Profile = () => {
                 className="bg-white dark:bg-gray-900 p-8 rounded-[32px] border-2 border-dashed border-pink-100 dark:border-pink-900/30 mb-8 transition-colors"
               >
                 <form onSubmit={handleAddAddress} className="grid md:grid-cols-2 gap-4">
-                  <input required className="md:col-span-2 p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="Recipient's Name" onChange={e => setNewAddress({...newAddress, fullName: e.target.value})} />
-                  <input required className="p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="Phone Number" onChange={e => setNewAddress({...newAddress, phone: e.target.value})} />
-                  <input required className="p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="Pincode" onChange={e => setNewAddress({...newAddress, pincode: e.target.value})} />
-                  <input required className="md:col-span-2 p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="House No, Area, Street" onChange={e => setNewAddress({...newAddress, street: e.target.value})} />
-                  <input required className="p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="City" onChange={e => setNewAddress({...newAddress, city: e.target.value})} />
-                  <input required className="p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="State" onChange={e => setNewAddress({...newAddress, state: e.target.value})} />
-                  <button className="md:col-span-2 bg-pink-600 text-white py-4 rounded-2xl font-bold hover:bg-black dark:hover:bg-white dark:hover:text-black transition shadow-lg">Save This Address</button>
+                  <input required className="md:col-span-2 p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="Recipient's Name" value={newAddress.fullName} onChange={e => setNewAddress({...newAddress, fullName: e.target.value})} />
+                  <input required className="p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="Phone Number" value={newAddress.phone} onChange={e => setNewAddress({...newAddress, phone: e.target.value})} />
+                  <input required className="p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="Pincode" value={newAddress.pincode} onChange={e => setNewAddress({...newAddress, pincode: e.target.value})} />
+                  <input required className="md:col-span-2 p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="House No, Area, Street" value={newAddress.street} onChange={e => setNewAddress({...newAddress, street: e.target.value})} />
+                  <input required className="p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="City" value={newAddress.city} onChange={e => setNewAddress({...newAddress, city: e.target.value})} />
+                  <input required className="p-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-pink-500 text-sm transition placeholder:text-gray-400 dark:placeholder:text-gray-600" placeholder="State" value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} />
+                  <button disabled={isSaving} className="md:col-span-2 bg-pink-600 text-white py-4 rounded-2xl font-bold hover:bg-black dark:hover:bg-white dark:hover:text-black transition shadow-lg disabled:bg-gray-400 flex items-center justify-center gap-2">
+                    {isSaving ? <Loader2 className="animate-spin" size={18} /> : "Save This Address"}
+                  </button>
                 </form>
               </motion.div>
             )}
@@ -115,7 +136,10 @@ const Profile = () => {
                       <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{addr.street}, {addr.city}, {addr.state} - {addr.pincode}</p>
                     </div>
                   </div>
-                  <button className="p-2 text-gray-200 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                  <button 
+                    onClick={() => handleDeleteAddress(addr._id || index)}
+                    className="p-2 text-gray-200 dark:text-gray-700 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                  >
                     <Trash2 size={18} />
                   </button>
                 </div>

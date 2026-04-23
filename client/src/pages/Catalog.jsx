@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from '../axios'; // ✅ Central API Instance use kar rahe hain
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Loader2 } from 'lucide-react';
 
 const Catalog = () => {
   const [view, setView] = useState('categories'); 
   const [selectedCategory, setSelectedCategory] = useState(null);
-  
-  // Ab selectedBudget mein hum pura object store karenge {min, max}
   const [selectedBudget, setSelectedBudget] = useState({ min: 0, max: 10000 });
-  
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +23,6 @@ const Catalog = () => {
     { name: "Kashmiri Earrings", img: "https://ishhaara.com/cdn/shop/files/ishhaara-long-kashmiri-earrings-74041861902866.jpg?v=1761388244" }
   ];
 
-  // Naye ranges jo aapne bataye
   const budgetRanges = [
     { label: "49 - 499", min: 49, max: 499 },
     { label: "499 - 999", min: 499, max: 999 },
@@ -41,16 +37,18 @@ const Catalog = () => {
       const fetchFiltered = async () => {
         setLoading(true);
         try {
-          const { data } = await axios.get(`http://localhost:5000/api/products`, {
+          // ✅ URL simplified and params passed correctly to Render
+          const { data } = await API.get(`/products`, {
             params: { 
               category: selectedCategory, 
-              minPrice: selectedBudget.min, // minPrice pass kiya
-              maxPrice: selectedBudget.max  // maxPrice pass kiya
+              minPrice: selectedBudget.min, 
+              maxPrice: selectedBudget.max 
             }
           });
           setProducts(data);
         } catch (err) {
           console.error("Filter Fetch Error:", err);
+          // Optional: Add a state for error and show user a message
         } finally {
           setLoading(false);
         }
@@ -90,7 +88,7 @@ const Catalog = () => {
         </div>
       )}
 
-      {/* 2. Budget View (NEW RANGES IMPLEMENTED) */}
+      {/* 2. Budget View */}
       {view === 'budgets' && (
         <div className="text-center max-w-4xl mx-auto animate-in slide-in-from-right duration-500">
           <button onClick={() => setView('categories')} className="mb-10 text-xs font-bold text-pink-600 uppercase tracking-widest flex items-center justify-center gap-2 mx-auto hover:translate-x-[-4px] transition-all">
@@ -116,7 +114,7 @@ const Catalog = () => {
         </div>
       )}
 
-      {/* 3. Products Final View */}
+      {/* 3. Products View */}
       {view === 'products' && (
         <div className="animate-in fade-in duration-500">
           <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-4 border-b pb-8 border-gray-100 dark:border-gray-800">
@@ -132,7 +130,7 @@ const Catalog = () => {
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-32 space-y-4">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-600"></div>
+              <Loader2 className="animate-spin text-pink-600" size={40} />
               <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 dark:text-gray-500 text-center">Loading Collection...</p>
             </div>
           ) : (
@@ -154,7 +152,7 @@ const Catalog = () => {
                       }}
                     />
                     <div className="absolute top-4 right-4 p-2 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                       <ShoppingBag size={18} className="text-pink-600"/>
+                        <ShoppingBag size={18} className="text-pink-600"/>
                     </div>
                   </div>
                   <div className="p-6 space-y-2">

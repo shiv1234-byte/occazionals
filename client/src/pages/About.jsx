@@ -1,28 +1,30 @@
 import React from 'react';
-import logo from '../components/logo.jpeg'; 
+// ❌ Purana import hata diya jo error de raha tha
 import { Gem, Heart, ShieldCheck, Star, Award, Zap, Coffee, Sparkles } from 'lucide-react';
 
 const About = () => {
   return (
     <div className="pt-28 pb-20 bg-gray-50 dark:bg-gray-950 transition-colors duration-500">
       
-      {/* --- Section 1: The Main Character Energy (Hero) --- */}
+      {/* --- Section 1: Hero Section --- */}
       <div className="max-w-5xl mx-auto text-center px-6 mb-24">
         <div className="mb-12 flex justify-center">
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-yellow-500 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-1000"></div>
             <div className="relative w-48 h-48 md:w-60 md:h-60 rounded-full overflow-hidden shadow-2xl border-4 border-white dark:border-gray-800 bg-white dark:bg-gray-900">
+              {/* ✅ Public folder se logo uthane ke liye direct path use kiya */}
               <img 
-                src={logo} 
-                alt="Occasionals Logo" 
+                src="/logo.png" 
+                alt="Occazionals Logo" 
                 className="w-full h-full object-contain p-6 transition-transform duration-700 group-hover:scale-110" 
+                onError={(e) => {e.target.src = 'https://placehold.co/400x400?text=Occazionals'}}
               />
             </div>
           </div>
         </div>
         
         <h1 className="text-5xl md:text-7xl font-serif font-black tracking-tight text-gray-900 dark:text-white mb-4 uppercase">
-          Occasionals<span className="text-pink-600">.</span>
+          Occazionals<span className="text-pink-600">.</span>
         </h1>
         <p className="text-[10px] md:text-xs tracking-[0.6em] text-pink-600 dark:text-pink-400 font-black mb-8">NO BS. JUST PREMIUM DRIP.</p>
         <div className="w-24 h-1 bg-gray-900 dark:bg-white mx-auto mb-10 rounded-full"></div>
@@ -32,7 +34,7 @@ const About = () => {
         </p>
       </div>
 
-      {/* --- Section 2: The Kota Story (Gen-Z Vibe) --- */}
+      {/* --- Section 2: The Kota Story --- */}
       <div className="bg-white dark:bg-gray-900 py-24 border-y border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-500">
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
           <div className="space-y-8">
@@ -43,7 +45,7 @@ const About = () => {
               The Lore <br/><span className="text-pink-600 italic">Behind the Brand</span>
             </h2>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">
-              Born in the study-vibes and student-hustle of **Kota, Rajasthan**, Occasionals started because we were tired of "aesthetic" jewelry that turns green in two days.
+              Born in the study-vibes and student-hustle of **Kota, Rajasthan**, Occazionals started because we were tired of "aesthetic" jewelry that turns green in two days.
             </p>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg font-medium italic">
               From late-night Chai sessions to becoming the official jewelry partner for your campus fests and wedding guest looks.
@@ -57,7 +59,7 @@ const About = () => {
           <div className="relative">
             <div className="bg-[#121212] dark:bg-black p-10 md:p-14 rounded-[40px] shadow-2xl text-white transform md:rotate-2 border border-gray-800">
               <h3 className="font-bold text-pink-500 mb-10 uppercase tracking-[0.3em] text-[10px] flex items-center gap-3">
-                <Sparkles size={18} /> THE OCCASIONALS CODE
+                <Sparkles size={18} /> THE OCCAZIONALS CODE
               </h3>
               <ul className="space-y-12">
                 <li className="flex gap-6">
@@ -87,7 +89,7 @@ const About = () => {
         </div>
       </div>
 
-      {/* --- Section 3: Why Us? (The Hype) --- */}
+      {/* --- Section 3: Why Us? --- */}
       <div className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center mb-20">
           <h2 className="text-3xl md:text-5xl font-serif font-bold mb-4 text-gray-900 dark:text-white uppercase">The Hype is Real</h2>

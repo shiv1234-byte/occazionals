@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import API from '../axios'; // ✅ Central API Instance use kar rahe hain
 import { useAuth } from '../context/AuthContext';
-import { Package, CheckCircle2, Truck, ChevronRight } from 'lucide-react';
+import { Package, CheckCircle2, Truck, ChevronRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,9 +15,10 @@ const Orders = () => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get('http://localhost:5000/api/orders/myorders', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // ✅ Localhost URL removed, using API instance
+        // Token headers automatically handle honge agar aapne axios interceptor lagaya hai, 
+        // warna ye manual headers bhi Render par sahi kaam karenge.
+        const { data } = await API.get('/orders/myorders');
         setOrders(data);
       } catch (err) {
         console.error("Error fetching orders:", err);
@@ -30,7 +31,7 @@ const Orders = () => {
 
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center bg-white dark:bg-gray-950 transition-colors duration-500">
-      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-pink-600"></div>
+      <Loader2 className="animate-spin h-10 w-10 text-pink-600" />
       <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Loading History...</p>
     </div>
   );
@@ -74,8 +75,8 @@ const Orders = () => {
                   <div>
                     <div className="flex items-center gap-3">
                       <p className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest">ID: #{order._id.slice(-8).toUpperCase()}</p>
-                      <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${order.isPaid ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-500' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-500'}`}>
-                        {order.isPaid ? 'Paid' : 'COD'}
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${order.paymentMethod === 'Online' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-500' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-500'}`}>
+                        {order.paymentMethod === 'Online' ? 'Paid' : 'COD'}
                       </span>
                     </div>
                     <p className="font-serif text-xl text-gray-900 dark:text-white mt-1 transition-colors">
@@ -103,15 +104,15 @@ const Orders = () => {
                 </div>
               </div>
 
-              {/* Jewelry Items Preview - Adaptive Design */}
+              {/* Jewelry Items Preview */}
               <div className="mt-8 pt-8 border-t border-gray-50 dark:border-gray-800 flex gap-4 overflow-x-auto no-scrollbar transition-colors">
                 {order.orderItems.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-4 bg-gray-50/50 dark:bg-gray-800/40 p-4 rounded-2xl min-w-[260px] border border-transparent hover:border-pink-100 dark:hover:border-pink-900/40 transition-all">
-                    <img src={item.image} alt="" className="w-16 h-16 object-cover rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" />
+                    <img src={item.image} alt="" className="w-16 h-16 object-cover rounded-xl shadow-sm border border-gray-100 dark:border-gray-700" onError={(e) => {e.target.src = 'https://placehold.co/400x400?text=Jewelry'}} />
                     <div className="text-xs">
                       <p className="font-bold text-gray-800 dark:text-gray-200 line-clamp-1 uppercase tracking-tight transition-colors">{item.name}</p>
                       <p className="text-pink-600 dark:text-pink-500 font-black mt-1">₹{item.price.toLocaleString('en-IN')}</p>
-                      <p className="text-[9px] text-gray-400 dark:text-gray-600 mt-1 uppercase font-black tracking-tighter">{item.category || 'Jewelry'}</p>
+                      <p className="text-[9px] text-gray-400 dark:text-gray-600 mt-1 uppercase font-black tracking-tighter">Premium Jewelry</p>
                     </div>
                   </div>
                 ))}

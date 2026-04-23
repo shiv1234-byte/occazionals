@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+// ✅ Agar error phir bhi aaye, toh check karein ki file src/api/axios.js hi hai
+import API from '../axios'; 
 import { 
   ShoppingBag, ShieldCheck, Share2, Check, Heart, Info, X, 
-  Truck, CreditCard, ChevronRight, Gem 
+  Truck, CreditCard, ChevronRight, Gem, Loader2 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
@@ -24,7 +25,8 @@ const ProductDetail = () => {
     const getProduct = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get(`http://localhost:5000/api/products/${id}`);
+        // ✅ API Instance calling Render/Localhost
+        const { data } = await API.get(`/products/${id}`);
         setProduct(data);
         setMainImage(data.images[0]);
       } catch (err) {
@@ -33,18 +35,22 @@ const ProductDetail = () => {
         setLoading(false);
       }
     };
-    getProduct();
+    if (id) getProduct();
   }, [id]);
 
   const handleAddToCart = () => {
-    addToCart(product);
-    setAddedToCartToast(true);
-    setTimeout(() => setAddedToCartToast(false), 3000);
+    if (product) {
+      addToCart(product);
+      setAddedToCartToast(true);
+      setTimeout(() => setAddedToCartToast(false), 3000);
+    }
   };
 
   const handleBuyNow = () => {
-    addToCart(product);
-    navigate('/checkout', { state: { product: product } });
+    if (product) {
+      addToCart(product);
+      navigate('/checkout', { state: { product: product } });
+    }
   };
 
   const handleShare = async () => {
@@ -56,15 +62,16 @@ const ProductDetail = () => {
   };
 
   if (loading) return (
-    <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-950 transition-colors duration-500">
-      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-pink-600"></div>
+    <div className="h-screen flex flex-col items-center justify-center bg-white dark:bg-gray-950 transition-colors duration-500">
+      <Loader2 className="animate-spin h-10 w-10 text-pink-600" />
+      <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 italic">Fetching Jewelry Details...</p>
     </div>
   );
 
   if (!product) return (
     <div className="h-screen flex flex-col items-center justify-center gap-4 text-center px-6 bg-white dark:bg-gray-950 transition-colors duration-500">
       <p className="text-gray-500 dark:text-gray-400 font-serif text-xl">Oops! This jewelry piece is no longer in our collection.</p>
-      <button onClick={() => navigate('/catalog')} className="bg-black dark:bg-pink-600 text-white px-8 py-3 rounded-xl font-bold uppercase text-xs tracking-widest">Back to Catalog</button>
+      <button onClick={() => navigate('/catalog')} className="bg-black dark:bg-pink-600 text-white px-8 py-3 rounded-xl font-bold uppercase text-xs tracking-widest shadow-lg">Back to Catalog</button>
     </div>
   );
 
@@ -94,14 +101,15 @@ const ProductDetail = () => {
             <img 
               src={mainImage} 
               alt={product.name} 
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              onError={(e) => {e.target.src = 'https://placehold.co/800x800?text=Premium+Jewelry'}}
             />
           </div>
           <div className="grid grid-cols-4 gap-4">
-            {product.images.map((img, idx) => (
+            {product.images?.map((img, idx) => (
               <button key={idx} onClick={() => setMainImage(img)}
                 className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all ${mainImage === img ? 'border-pink-500 scale-95' : 'border-transparent dark:border-gray-800 opacity-60'}`}>
-                <img src={img} className="w-full h-full object-cover" alt="jewelry preview" />
+                <img src={img} className="w-full h-full object-cover" alt="preview" onError={(e) => {e.target.src = 'https://placehold.co/200x200?text=Preview'}} />
               </button>
             ))}
           </div>
@@ -124,9 +132,9 @@ const ProductDetail = () => {
           </div>
 
           <div className="flex items-baseline gap-4 border-b pb-8 border-gray-100 dark:border-gray-800 transition-colors">
-            <span className="text-4xl font-bold text-gray-900 dark:text-white">₹{product.salePrice}</span>
-            <span className="text-lg text-gray-400 dark:text-gray-600 line-through">₹{product.salePrice + 500}</span>
-            <span className="bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">Limited Collection</span>
+            <span className="text-4xl font-bold text-gray-900 dark:text-white">₹{product.salePrice?.toLocaleString('en-IN')}</span>
+            <span className="text-lg text-gray-400 dark:text-gray-600 line-through">₹{(product.salePrice + 500).toLocaleString('en-IN')}</span>
+            <span className="bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">Handcrafted</span>
           </div>
 
           <div className="space-y-4">
@@ -138,14 +146,14 @@ const ProductDetail = () => {
           <div className="bg-gray-50/50 dark:bg-gray-900/50 p-6 rounded-[32px] space-y-4 border border-gray-100 dark:border-gray-800 transition-colors">
             <div className="flex justify-between items-center">
               <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Delivery & Trust</span>
-              <button onClick={() => setIsInfoOpen(true)} className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1 hover:underline"><Info size={12}/> Payment Policy</button>
+              <button onClick={() => setIsInfoOpen(true)} className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1 hover:underline"><Info size={12}/> Policy</button>
             </div>
             <div className="grid grid-cols-1 gap-3">
               <div className="flex items-center gap-4 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-50 dark:border-gray-700 shadow-sm transition-colors">
-                <Truck className="text-pink-600 dark:text-pink-500" size={20} /> Shipping across India from Kota
+                <Truck className="text-pink-600 dark:text-pink-500" size={20} /> Insured Shipping from Kota Hub
               </div>
               <div className="flex items-center gap-4 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-50 dark:border-gray-700 shadow-sm transition-colors">
-                <ShieldCheck className="text-green-600 dark:text-green-500" size={20} /> Secure Payments & COD Available
+                <ShieldCheck className="text-green-600 dark:text-green-500" size={20} /> Secure Payments & COD Verified
               </div>
             </div>
           </div>
@@ -172,15 +180,15 @@ const ProductDetail = () => {
             <div className="flex gap-3">
               <Gem className="text-pink-600 dark:text-pink-500" size={20} />
               <div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-900 dark:text-white">Handcrafted</h4>
-                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Detailed artisans work on every piece.</p>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-900 dark:text-white">Authentic</h4>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">High-grade finishing on every piece.</p>
               </div>
             </div>
             <div className="flex gap-3">
               <ShieldCheck className="text-pink-600 dark:text-pink-500" size={20} />
               <div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-900 dark:text-white">Skin Friendly</h4>
-                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Nickel-free and Anti-tarnish polish.</p>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-900 dark:text-white">Skin Safe</h4>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Anti-tarnish and Allergy-free polish.</p>
               </div>
             </div>
           </div>
@@ -197,30 +205,30 @@ const InfoModal = ({ isOpen, onClose }) => (
     {isOpen && (
       <>
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          onClick={onClose} className="fixed inset-0 bg-black/60 z-50 backdrop-blur-md" />
+          onClick={onClose} className="fixed inset-0 bg-black/60 z-[110] backdrop-blur-md" />
         <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-          className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-[40px] z-[60] p-10 max-w-2xl mx-auto shadow-2xl transition-colors">
+          className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-[40px] z-[120] p-10 max-w-2xl mx-auto shadow-2xl transition-colors">
           <div className="flex justify-between items-center mb-8 border-b dark:border-gray-800 pb-4">
-            <h2 className="text-2xl font-serif font-bold text-gray-900 dark:text-white">Occasionals Policy</h2>
+            <h2 className="text-2xl font-serif font-bold text-gray-900 dark:text-white">Shopping Policy</h2>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition text-gray-900 dark:text-white"><X size={24} /></button>
           </div>
           <div className="space-y-6">
             <div className="flex gap-4">
               <div className="bg-pink-100 dark:bg-pink-900/30 p-3 rounded-full text-pink-600 dark:text-pink-400 h-fit transition-colors"><CreditCard size={20} /></div>
               <div>
-                <h4 className="font-bold text-gray-900 dark:text-white">Secure Checkout</h4>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">We use encrypted gateways for UPI and Card payments. Your data is safe.</p>
+                <h4 className="font-bold text-gray-900 dark:text-white">Secure Transaction</h4>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">We use Razorpay for 100% secure UPI and card payments.</p>
               </div>
             </div>
             <div className="flex gap-4">
               <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full text-green-600 dark:text-green-500 h-fit transition-colors"><Truck size={20} /></div>
               <div>
-                <h4 className="font-bold text-gray-900 dark:text-white">Dispatch Info</h4>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Orders are dispatched within 24-48 hours from our Kota hub.</p>
+                <h4 className="font-bold text-gray-900 dark:text-white">Express Shipping</h4>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Every order is shipped within 24 hours with tracking.</p>
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="w-full bg-black dark:bg-pink-600 text-white py-4 rounded-2xl mt-10 font-bold uppercase text-[10px] tracking-widest shadow-xl">I Understand</button>
+          <button onClick={onClose} className="w-full bg-black dark:bg-pink-600 text-white py-4 rounded-2xl mt-10 font-bold uppercase text-[10px] tracking-widest shadow-xl">Close</button>
         </motion.div>
       </>
     )}

@@ -3,7 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, Loader2 } from 'lucide-react';
-import axios from 'axios';
+
+// ✅ Path ko confirm karein: agar src/pages mein Login hai, toh ../api/axios sahi hai
+import API from '../axios'; 
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -17,7 +19,9 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      // ✅ API instance use ho raha hai
+      const { data } = await API.post('/auth/login', { email, password });
+      
       if (data.success) {
         login(data.user, data.token); 
         navigate('/catalog');
@@ -42,44 +46,34 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
-          {/* Email Input */}
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-500" size={18} />
             <input 
               type="email" 
               placeholder="Email Address" 
               required
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white border-none rounded-2xl focus:ring-2 focus:ring-pink-500 transition outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
+              className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white border-none rounded-2xl focus:ring-2 focus:ring-pink-500 transition outline-none"
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
-          {/* Password Input */}
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-500" size={18} />
             <input 
               type="password" 
               placeholder="Password" 
               required
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white border-none rounded-2xl focus:ring-2 focus:ring-pink-500 transition outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
+              className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white border-none rounded-2xl focus:ring-2 focus:ring-pink-500 transition outline-none"
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
-          {/* Login Button */}
           <button 
             type="submit" 
             disabled={loading}
-            className={`w-full bg-black dark:bg-pink-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-pink-600 dark:hover:bg-white dark:hover:text-black transition-all shadow-xl group ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full bg-black dark:bg-pink-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-pink-600 transition-all shadow-xl ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            {loading ? (
-              <Loader2 className="animate-spin" size={18} />
-            ) : (
-              <>
-                <LogIn size={18} className="group-hover:translate-x-1 transition-transform" /> 
-                Sign In
-              </>
-            )}
+            {loading ? <Loader2 className="animate-spin" size={18} /> : <><LogIn size={18} /> Sign In</>}
           </button>
         </form>
 

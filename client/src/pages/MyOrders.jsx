@@ -1,22 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import API from '../axios'; // ✅ Central API Instance use kar rahe hain
 import { useAuth } from '../context/AuthContext';
-import { Package, CheckCircle, Download, ShoppingBag, Truck } from 'lucide-react';
+import { Package, CheckCircle, Download, ShoppingBag, Truck, Loader2 } from 'lucide-react';
 
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [loadingInvoice, setLoadingInvoice] = useState(null);
   const { token } = useAuth();
 
   useEffect(() => {
     const fetchOrders = async () => {
+      setLoading(true);
       try {
-        const { data } = await axios.get('http://localhost:5000/api/orders/myorders', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // ✅ Localhost removed, using API instance with automatic baseURL
+        const { data } = await API.get('/orders/myorders');
         setOrders(data);
       } catch (err) {
         console.error("Error fetching orders", err);
+      } finally {
+        setLoading(false);
       }
     };
     if (token) fetchOrders();
@@ -25,9 +28,9 @@ const MyOrders = () => {
   const downloadPremiumInvoice = async (orderId) => {
     setLoadingInvoice(orderId);
     try {
-      const response = await axios.get(`http://localhost:5000/api/orders/${orderId}/invoice`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob',
+      // ✅ Using API instance for Invoice generation
+      const response = await API.get(`/orders/${orderId}/invoice`, {
+        responseType: 'blob', // Important for PDF files
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -40,11 +43,18 @@ const MyOrders = () => {
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert("Invoice generate nahi ho paya!");
+      alert("Invoice generate nahi ho paya. Please try again later.");
     } finally {
       setLoadingInvoice(null);
     }
   };
+
+  if (loading) return (
+    <div className="pt-40 text-center dark:text-white flex flex-col items-center gap-4">
+      <Loader2 className="animate-spin text-pink-500" size={40} />
+      <p className="uppercase tracking-widest text-[10px] font-bold">Fetching your jewelry history...</p>
+    </div>
+  );
 
   return (
     <div className="pt-32 pb-20 px-6 max-w-5xl mx-auto min-h-screen bg-transparent dark:bg-gray-950 transition-colors duration-500">
@@ -66,7 +76,7 @@ const MyOrders = () => {
           {orders.map((order) => (
             <div key={order._id} className="group bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-2xl transition-all duration-500">
               
-              {/* Order Header Card - Subtle contrast */}
+              {/* Order Header Card */}
               <div className="bg-gray-50/50 dark:bg-black/20 px-10 py-6 flex flex-wrap justify-between items-center border-b border-gray-100 dark:border-gray-800 gap-4 transition-colors">
                 <div className="flex gap-8">
                   <div>
@@ -93,7 +103,7 @@ const MyOrders = () => {
                   {order.orderItems.map((item, index) => (
                     <div key={index} className="flex items-center gap-8 py-6 first:pt-0 last:pb-0">
                       <div className="w-20 h-24 bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden flex-shrink-0">
-                         <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
+                         <img src={item.image} className="w-full h-full object-cover" alt={item.name} onError={(e) => {e.target.src = 'https://placehold.co/400x400?text=Jewelry'}} />
                       </div>
                       <div className="flex-1">
                         <p className="text-lg font-serif font-bold text-gray-900 dark:text-white transition-colors">{item.name}</p>
@@ -114,7 +124,7 @@ const MyOrders = () => {
                       disabled={loadingInvoice === order._id}
                       className={`flex items-center gap-2 px-6 py-4 bg-black dark:bg-pink-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-2xl hover:bg-pink-600 dark:hover:bg-white dark:hover:text-black transition-all ${loadingInvoice === order._id ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      {loadingInvoice === order._id ? 'Generating...' : <><Download size={14} /> Download Premium Invoice</>}
+                      {loadingInvoice === order._id ? <><Loader2 className="animate-spin" size={14}/> Generating...</> : <><Download size={14} /> Download Premium Invoice</>}
                     </button>
                     <button className="flex items-center gap-2 px-6 py-4 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-[10px] font-bold uppercase tracking-widest rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
                        <Truck size={14} /> Track Order
