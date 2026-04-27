@@ -1,8 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Facebook, Mail, MapPin, Phone, Gem, ShieldCheck, Truck, MessageCircle } from 'lucide-react';
+import { Instagram, Mail, MapPin, Phone, Gem, ShieldCheck, Truck, MessageCircle } from 'lucide-react';
 
 const Footer = () => {
+  // Helper function: Link click par page ko upar le jane ke liye
+  const handleLinkClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="bg-gray-50 dark:bg-[#121212] text-gray-600 dark:text-gray-300 pt-16 pb-8 transition-colors duration-500 border-t border-gray-200 dark:border-none">
       <div className="max-w-7xl mx-auto px-6">
@@ -31,7 +36,7 @@ const Footer = () => {
           
           {/* 1. Brand Intro */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-serif font-bold tracking-tighter text-gray-900 dark:text-white">Occasionals</h2>
+            <h2 className="text-2xl font-serif font-bold tracking-tighter text-gray-900 dark:text-white uppercase">Occasionals.</h2>
             <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
               Based in Kota, Rajasthan. We bring you the finest artificial jewelry that looks as real as gold. Perfect for weddings and daily elegance.
             </p>
@@ -45,7 +50,7 @@ const Footer = () => {
                 <Instagram size={20}/>
               </a>
               <a 
-                href="https://chat.whatsapp.com/your-actual-community-link" 
+                href="https://wa.me/919251194430" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="text-gray-400 hover:text-green-600 dark:hover:text-green-500 transition-colors"
@@ -59,21 +64,22 @@ const Footer = () => {
           <div>
             <h3 className="font-bold text-xs uppercase tracking-[0.2em] mb-6 text-gray-400 dark:text-gray-500">Collections</h3>
             <ul className="space-y-3 text-sm font-medium">
-              <li><Link to="/catalog" className="hover:text-pink-600 dark:hover:text-white transition">Kundan Jewellery</Link></li>
-              <li><Link to="/catalog" className="hover:text-pink-600 dark:hover:text-white transition">Anti Tarnish Sets</Link></li>
-              <li><Link to="/catalog" className="hover:text-pink-600 dark:hover:text-white transition">American Diamond</Link></li>
-              <li><Link to="/catalog" className="hover:text-pink-600 dark:hover:text-white transition">Jhumka Earrings</Link></li>
+              <li><Link to="/catalog" onClick={handleLinkClick} className="hover:text-pink-600 dark:hover:text-white transition">Kundan Jewellery</Link></li>
+              <li><Link to="/catalog" onClick={handleLinkClick} className="hover:text-pink-600 dark:hover:text-white transition">Anti Tarnish Sets</Link></li>
+              <li><Link to="/catalog" onClick={handleLinkClick} className="hover:text-pink-600 dark:hover:text-white transition">American Diamond</Link></li>
+              <li><Link to="/catalog" onClick={handleLinkClick} className="hover:text-pink-600 dark:hover:text-white transition">Jhumka Earrings</Link></li>
             </ul>
           </div>
 
-          {/* 3. Information */}
+          {/* 3. Information (✅ Clickable Pages Added) */}
           <div>
             <h3 className="font-bold text-xs uppercase tracking-[0.2em] mb-6 text-gray-400 dark:text-gray-500">Customer Care</h3>
             <ul className="space-y-3 text-sm font-medium">
-              <li><Link to="/about" className="hover:text-pink-600 dark:hover:text-white transition">Our Story</Link></li>
-              <li><Link to="/shipping" className="hover:text-pink-600 dark:hover:text-white transition">Shipping Policy</Link></li>
-              <li><Link to="/returns" className="hover:text-pink-600 dark:hover:text-white transition">Return & Exchange</Link></li>
-              <li><Link to="/terms" className="hover:text-pink-600 dark:hover:text-white transition">Privacy Policy</Link></li>
+              <li><Link to="/about" onClick={handleLinkClick} className="hover:text-pink-600 dark:hover:text-white transition">Our Story</Link></li>
+              <li><Link to="/shipping-policy" onClick={handleLinkClick} className="hover:text-pink-600 dark:hover:text-white transition">Shipping Policy</Link></li>
+              <li><Link to="/returns-policy" onClick={handleLinkClick} className="hover:text-pink-600 dark:hover:text-white transition">Return & Exchange</Link></li>
+              <li><Link to="/privacy-policy" onClick={handleLinkClick} className="hover:text-pink-600 dark:hover:text-white transition">Privacy Policy</Link></li>
+              <li><Link to="/terms-conditions" onClick={handleLinkClick} className="hover:text-pink-600 dark:hover:text-white transition">Terms & Conditions</Link></li>
             </ul>
           </div>
 
@@ -103,7 +109,7 @@ const Footer = () => {
           <p className="text-[10px] font-bold uppercase tracking-widest dark:text-gray-600">
             © 2026 Occasionals Jewels. Created by Shiv Kumar Rathor.
           </p>
-          <div className="flex gap-4 items-center opacity-40 dark:opacity-30 dark:invert-0 grayscale dark:grayscale-0 transition-all">
+          <div className="flex gap-4 items-center opacity-40 dark:opacity-30 grayscale transition-all">
               <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6" />
               <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4" />
               <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-3" />
