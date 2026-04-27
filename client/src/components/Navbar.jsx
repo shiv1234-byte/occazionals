@@ -17,6 +17,7 @@ const Navbar = () => {
   const { cartItems } = useCart();
   const navigate = useNavigate();
 
+  // ✅ 1. Scroll tracking for transparent-to-solid effect
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
@@ -29,6 +30,7 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // ✅ 2. Theme Toggle Logic
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -48,6 +50,9 @@ const Navbar = () => {
     navigate('/');
   };
 
+  // ✅ 3. Helper to check if user is admin (Database check OR Specific Admin Email)
+  const isUserAdmin = user?.isAdmin || user?.email === 'occasionalsjewels@gmail.com';
+
   return (
     <>
       <nav 
@@ -59,7 +64,7 @@ const Navbar = () => {
       >
         <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between">
           
-          {/* --- MOBILE: Hamburger Menu --- */}
+          {/* MOBILE: Hamburger */}
           <div className="flex md:hidden">
             <button 
               onClick={() => setIsOpen(true)} 
@@ -69,7 +74,7 @@ const Navbar = () => {
             </button>
           </div>
 
-          {/* --- CENTER/LEFT: LOGO & DESKTOP LINKS --- */}
+          {/* CENTER/LEFT: Logo & Desktop Links */}
           <div className="flex items-center gap-10">
             <Link to="/" className="flex items-center">
               <span className={`text-xl md:text-2xl font-serif font-black tracking-tighter uppercase transition-colors duration-500 ${
@@ -79,7 +84,6 @@ const Navbar = () => {
               </span>
             </Link>
 
-            {/* DESKTOP LINKS */}
             <div className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => (
                 <Link 
@@ -95,8 +99,8 @@ const Navbar = () => {
                 </Link>
               ))}
 
-              {/* ✅ ADMIN BUTTON (Desktop) - Only for occasionalsjewels */}
-              {user && user.isAdmin && (
+              {/* ✅ ADMIN BUTTON (Desktop) - Improved check */}
+              {isUserAdmin && (
                 <Link 
                   to="/admin/dashboard" 
                   className="bg-pink-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg animate-pulse"
@@ -107,9 +111,8 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* --- RIGHT: ICONS --- */}
+          {/* RIGHT: Tools & Cart */}
           <div className="flex items-center gap-2 sm:gap-4">
-            
             <button 
               onClick={() => setDarkMode(!darkMode)} 
               className={`p-2 transition-colors duration-500 ${
@@ -119,16 +122,6 @@ const Navbar = () => {
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            <button 
-              onClick={() => setIsSearchOpen(!isSearchOpen)} 
-              className={`p-2 transition-colors duration-500 ${
-                isScrolled ? 'text-gray-800 dark:text-white' : 'text-white'
-              } hover:text-pink-600`}
-            >
-              <Search size={20} />
-            </button>
-
-            {/* DESKTOP ACCOUNT SECTION */}
             <div className={`hidden md:flex items-center gap-4 border-l pl-4 transition-colors duration-500 ${
               isScrolled ? 'border-gray-100 dark:border-gray-800' : 'border-white/20'
             }`}>
@@ -140,7 +133,7 @@ const Navbar = () => {
                       isScrolled ? 'text-gray-600 dark:text-gray-400' : 'text-gray-200'
                     }`}
                   >
-                    My Account
+                    Account
                   </Link>
                   <button onClick={handleLogout} className="text-red-500 hover:scale-110 transition">
                     <LogOut size={18} />
@@ -166,7 +159,7 @@ const Navbar = () => {
             >
               <ShoppingBag size={22} />
               {cartItems?.length > 0 && (
-                <span className="absolute top-0 right-0 bg-pink-600 text-white text-[8px] font-bold h-4 w-4 rounded-full flex items-center justify-center border-2 border-white dark:border-[#0a0a0a]">
+                <span className="absolute -top-1 -right-1 bg-pink-600 text-white text-[8px] font-bold h-4 w-4 rounded-full flex items-center justify-center border-2 border-white dark:border-[#0a0a0a]">
                   {cartItems.length}
                 </span>
               )}
@@ -175,52 +168,26 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* --- SIDEBAR DRAWER (FOR MOBILE) --- */}
+      {/* MOBILE SIDEBAR */}
       <AnimatePresence>
         {isOpen && (
           <>
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              onClick={() => setIsOpen(false)} 
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10001]" 
-            />
-            <motion.div 
-              initial={{ x: '-100%' }} 
-              animate={{ x: 0 }} 
-              exit={{ x: '-100%' }} 
-              transition={{ type: 'tween' }} 
-              className="fixed top-0 left-0 w-[80%] max-w-[300px] h-screen bg-white dark:bg-[#0a0a0a] z-[10002] shadow-2xl p-8 flex flex-col" 
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOpen(false)} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10001]" />
+            <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'tween' }} className="fixed top-0 left-0 w-[80%] max-w-[300px] h-screen bg-white dark:bg-[#0a0a0a] z-[10002] shadow-2xl p-8 flex flex-col" >
               <div className="flex justify-between items-center mb-10">
-                <span className="font-serif font-black text-xl dark:text-white uppercase tracking-tighter">
-                  Menu<span className="text-pink-600">.</span>
-                </span>
-                <button onClick={() => setIsOpen(false)} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full dark:text-white">
-                  <X size={20} />
-                </button>
+                <span className="font-serif font-black text-xl dark:text-white uppercase tracking-tighter">Menu<span className="text-pink-600">.</span></span>
+                <button onClick={() => setIsOpen(false)} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full dark:text-white"><X size={20} /></button>
               </div>
 
               <div className="flex flex-col gap-6">
-                {/* ✅ ADMIN LINK (Mobile Sidebar) */}
-                {user && user.isAdmin && (
-                  <Link 
-                    to="/admin/dashboard" 
-                    onClick={() => setIsOpen(false)} 
-                    className="flex items-center gap-4 text-lg font-bold text-pink-600 bg-pink-50 dark:bg-pink-900/20 p-4 rounded-2xl"
-                  >
+                {isUserAdmin && (
+                  <Link to="/admin/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-4 text-lg font-bold text-pink-600 bg-pink-50 dark:bg-pink-900/20 p-4 rounded-2xl">
                     <LayoutDashboard size={20} /> Admin Dashboard
                   </Link>
                 )}
 
                 {navLinks.map((link) => (
-                  <Link 
-                    key={link.name} 
-                    to={link.path} 
-                    onClick={() => setIsOpen(false)} 
-                    className="flex items-center gap-4 text-xl font-bold dark:text-white hover:text-pink-600 p-2"
-                  >
+                  <Link key={link.name} to={link.path} onClick={() => setIsOpen(false)} className="flex items-center gap-4 text-xl font-bold dark:text-white hover:text-pink-600 p-2">
                     <span className="text-pink-600">{link.icon}</span> {link.name}
                   </Link>
                 ))}
@@ -232,21 +199,12 @@ const Navbar = () => {
                     <Link to="/profile" onClick={() => setIsOpen(false)} className="flex items-center gap-4 text-lg font-bold dark:text-gray-300 p-2">
                       <User size={20} className="text-pink-600"/> My Account
                     </Link>
-                    <button 
-                      onClick={handleLogout} 
-                      className="flex items-center gap-4 text-lg font-bold text-red-500 uppercase tracking-widest p-2"
-                    >
+                    <button onClick={handleLogout} className="flex items-center gap-4 text-lg font-bold text-red-500 uppercase tracking-widest p-2">
                       <LogOut size={20} /> Logout
                     </button>
                   </div>
                 ) : (
-                  <Link 
-                    to="/login" 
-                    onClick={() => setIsOpen(false)} 
-                    className="w-full bg-pink-600 text-white py-4 rounded-2xl text-center font-bold uppercase tracking-widest shadow-lg"
-                  >
-                    Sign In
-                  </Link>
+                  <Link to="/login" onClick={() => setIsOpen(false)} className="w-full bg-pink-600 text-white py-4 rounded-2xl text-center font-bold uppercase tracking-widest shadow-lg">Sign In</Link>
                 )}
               </div>
             </motion.div>

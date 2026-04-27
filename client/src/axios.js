@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 const API = axios.create({
-  // ✅ 1. Sahi Base URL (Make sure trailing slash na ho)
+  // ✅ 1. Sahi Base URL
   baseURL: 'https://occazionals-backend.onrender.com/api',
   
-  // ✅ 2. Timeout (Render kabhi kabhi slow hota hai, isliye 10s ka wait karega)
-  timeout: 10000, 
+  // ✅ 2. Timeout (Render free tier ke liye 15s zyada safe hai)
+  timeout: 15000, 
   
   headers: {
     'Content-Type': 'application/json',
@@ -15,7 +15,8 @@ const API = axios.create({
 // ✅ 3. REQUEST INTERCEPTOR: Har request ke saath Token bhejne ke liye
 API.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token'); // Ya jo bhi aapne AuthContext mein set kiya hai
+    // LocalStorage se token fetch karein
+    const token = localStorage.getItem('token'); 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -26,14 +27,27 @@ API.interceptors.request.use(
   }
 );
 
-// ✅ 4. RESPONSE INTERCEPTOR: Agar 401 (Unauthorized) aaye toh login pe bhejne ke liye
+// ✅ 4. RESPONSE INTERCEPTOR: Errors handle karne ke liye
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      // window.location.href = '/login'; // Optional: Redirect if session expires
+    // 💡 Case A: Agar server respond na kare (Timeout)
+    if (error.code === 'ECONNABORTED') {
+      console.error("Server is taking too long to respond. Please try again.");
     }
+
+    // 💡 Case B: Unauthorized (401) - Token expire ya missing
+    if (error.response && error.response.status === 401) {
+      console.warn("Session expired. Redirecting to login...");
+      
+      // Data clear karein
+      localStorage.removeItem('token');
+      localStorage.removeItem('user'); 
+      
+      // Redirect to login (Optional: uncomment if needed)
+      // window.location.href = '/login'; 
+    }
+
     return Promise.reject(error);
   }
 );
