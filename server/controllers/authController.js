@@ -1,28 +1,29 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const twilio = require('twilio');
+const sendOTPWithoutDLT = require('../utils/otpService');
+const nodemailer = require('nodemailer');
 
-// Twilio Initialize
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-
-// --- 1. SEND OTP ---
+// --- 1. SEND OTP (For Signup - Background Process) ---
 exports.sendOTP = async (req, res) => {
   try {
     const { phone } = req.body;
-    const otp = Math.floor(100000 + Math.random() * 900000);
+    if (!phone) return res.status(400).json({ success: false, message: "Phone required" });
 
-    // Ensure .env has TWILIO_WHATSAPP_NUMBER without 'whatsapp:' prefix if you add it here
-    await client.messages.create({
-      body: `Your Occasionals Jewels verification code is: ${otp}`,
-      from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
-      to: `whatsapp:+91${phone}` 
+    const otp = Math.floor(1000 + Math.random() * 9000);
+
+    // ⚡ Response turant bhej do taaki timeout na ho
+    res.status(200).json({ 
+      success: true, 
+      message: "OTP process started!", 
+      otpValue: otp 
     });
 
-    res.status(200).json({ success: true, otpHash: otp });
+    // ⚡ SMS background mein bhejo
+    sendOTPWithoutDLT(phone, otp).catch(err => console.log("Background SMS Error:", err.message));
+
   } catch (error) {
-    console.error("Twilio Error:", error.message);
-    res.status(500).json({ success: false, message: "OTP send nahi ho paya" });
+    if (!res.headersSent) res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -30,21 +31,20 @@ exports.sendOTP = async (req, res) => {
 exports.register = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
-    
-    // Check if user already exists
     const userExists = await User.findOne({ $or: [{ email }, { phone }] });
     if (userExists) return res.status(400).json({ success: false, message: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, phone, password: hashedPassword });
-    
-    res.status(201).json({ success: true, message: "User registered!" });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    res.status(201).json({ success: true, token, user: { id: user._id, name: user.name, email: user.email } });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
-// --- 3. LOGIN (Fixed for Button Issue) ---
+// --- 3. LOGIN ---
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -52,53 +52,81 @@ exports.login = async (req, res) => {
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-      // Yeh response frontend ke 'login' function ko milna zaroori hai
       res.json({ 
-        success: true, 
-        token, 
-        user: { 
-          id: user._id,
-          name: user.name, 
-          email: user.email,
-          phone: user.phone,
-          addresses: user.addresses || [], // Ensure addresses are sent
-          isAdmin: user.isAdmin 
-        } 
+        success: true, token, 
+        user: { id: user._id, name: user.name, email: user.email, phone: user.phone, addresses: user.addresses || [], isAdmin: user.isAdmin } 
       });
     } else {
       res.status(401).json({ success: false, message: "Invalid email or password" });
     }
   } catch (error) {
-    console.error("Login Error:", error.message);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
-// --- 4. ADD ADDRESS (Profile Page ke liye) ---
-exports.addAddress = async (req, res) => {
+// --- 4. FORGOT PASSWORD (OTP on Email) ---
+exports.forgotPassword = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const { email } = req.body;
+    const user = await User.findOne({ email });
 
-    user.addresses.push(req.body);
-    await user.save();
-    res.status(200).json({ success: true, addresses: user.addresses });
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const otp = Math.floor(1000 + Math.random() * 9000);
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    const mailOptions = {
+      from: `"Occasionals Jewels" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Reset Password OTP - Occasionals",
+      html: `
+        <div style="font-family: serif; border: 1px solid #ddd; padding: 20px;">
+          <h2 style="color: #db2777;">Occasionals.</h2>
+          <p>Your OTP to reset your password is: <strong>${otp}</strong></p>
+          <p>If you didn't request this, please ignore this email.</p>
+        </div>`
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ success: true, message: "OTP sent to email", otpValue: otp });
+
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Email Error:", error.message);
+    res.status(500).json({ success: false, message: "Email service failed" });
   }
 };
 
-// --- 5. INITIAL ADDRESS (Signup Step 3 ke liye) ---
+// --- 5. RESET PASSWORD (Final Step) ---
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ success: true, message: "Password updated! Please login." });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to reset password" });
+  }
+};
+
+// --- 6. ADDRESS MANAGEMENT ---
 exports.addInitialAddress = async (req, res) => {
   try {
     const { email, address } = req.body;
     const user = await User.findOne({ email });
-    
     if (user) {
       user.addresses.push(address);
       await user.save();
-      res.status(200).json({ success: true, message: "Address added successfully" });
+      res.status(200).json({ success: true });
     } else {
       res.status(404).json({ message: "User not found" });
     }
